@@ -499,8 +499,8 @@
         
         {% if source_breakdown %}
         // Source Distribution Chart
-        const sourceLabels = {{ source_breakdown | map(attribute='source') | list | tojson }};
-        const sourceValues = {{ source_breakdown | map(attribute='word_count') | list | tojson }};
+        const sourceLabels = [{% for source in source_breakdown %}"{{ source.source }}"{% if not loop.last %},{% endif %}{% endfor %}];
+        const sourceValues = [{% for source in source_breakdown %}{{ source.word_count }}{% if not loop.last %},{% endif %}{% endfor %}];
         
         const sourceData = [{
             values: sourceValues,
