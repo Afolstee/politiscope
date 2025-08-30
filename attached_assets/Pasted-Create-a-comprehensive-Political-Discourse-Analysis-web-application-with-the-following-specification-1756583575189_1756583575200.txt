@@ -1,0 +1,137 @@
+Create a comprehensive Political Discourse Analysis web application with the following specifications:
+Core Functionality:
+Stage 1: Political Actor Input
+
+Clean input interface for entering politician's name
+Validation to ensure proper name format
+Option to specify country/region for better search results
+
+Stage 2: Automated Text Collection
+
+Search and scrape from free sources:
+
+Wikipedia for biographical info and quote sections
+Government websites (congress.gov, parliament.uk, etc.)
+News websites with free access (BBC, Reuters, AP News)
+YouTube transcripts via unofficial APIs
+Google News results
+Political party websites
+OpenAI/Hugging Face for any available political speech datasets
+
+
+Display progress bar during collection
+Show summary of collected texts (word count, source breakdown)
+
+Stage 3: Analysis Type Selection
+Present these discourse analysis options:
+
+Rhetorical Analysis - Ethos, pathos, logos identification
+Critical Discourse Analysis - Power relations, ideology, social positioning
+Sentiment Evolution - How emotional tone changes over time
+Frame Analysis - Issue framing strategies and metaphor usage
+Linguistic Feature Analysis - Complexity, formality, readability scores
+Comparative Analysis - Compare with other politicians (if multiple names provided)
+Topic Modeling - Identify key themes and their evolution
+Persuasion Techniques - Identify specific rhetorical devices and strategies
+
+Stage 4: Analysis Processing
+
+Real-time progress indicator
+Use natural language processing libraries (spaCy, NLTK, TextBlob)
+Implement machine learning for pattern recognition
+Generate visualizations (charts, word clouds, timeline graphs)
+
+Stage 5: Results Display
+
+Interactive dashboard with:
+
+Key findings summary
+Detailed analysis breakdown
+Visual representations (graphs, charts, word clouds)
+Specific examples from the text with highlighting
+Confidence scores for AI-generated insights
+Export options (PDF, CSV, JSON)
+
+
+
+Stage 6: Feedback and Learning System
+
+Allow users to rate analysis accuracy (1-5 stars)
+Provide text boxes for specific corrections
+"Was this analysis helpful?" feedback
+Option to flag incorrect interpretations
+Simple machine learning feedback loop to improve future analyses
+
+Technical Requirements:
+Frontend:
+
+Modern, responsive web interface using React or vanilla JavaScript
+Clean, academic-looking design suitable for research
+Progress indicators and loading states
+Interactive data visualizations
+
+Backend:
+
+Python Flask or FastAPI for processing
+Web scraping capabilities (Beautiful Soup, Scrapy)
+NLP processing (spaCy, NLTK, transformers)
+Data visualization (Plotly, Matplotlib)
+Simple database for storing feedback (SQLite)
+
+Key Libraries to Include:
+python# NLP and Analysis
+import spacy
+import nltk
+from textblob import TextBlob
+from transformers import pipeline
+import pandas as pd
+
+# Web scraping
+import requests
+from bs4 import BeautifulSoup
+import feedparser
+
+# Visualization
+import plotly.express as px
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+
+# Machine Learning
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+Features:
+
+Error handling for failed web requests
+Rate limiting to respect website policies
+Text preprocessing and cleaning functions
+Multiple export formats
+User session management
+Responsive design for mobile/desktop
+
+File Structure:
+political-discourse-analyzer/
+├── app.py (main Flask application)
+├── scraper.py (web scraping functions)
+├── analyzer.py (discourse analysis functions)
+├── templates/
+│   ├── index.html
+│   ├── results.html
+│   └── feedback.html
+├── static/
+│   ├── css/style.css
+│   └── js/main.js
+├── data/
+│   └── feedback.db
+└── requirements.txt
+Create a fully functional application that demonstrates political discourse analysis capabilities suitable for academic research and graduate school applications.
+
+Additional Instructions for Replit:
+
+Make the interface professional and research-focused
+Include sample politicians for testing (Obama, Churchill, etc.)
+Add clear instructions and help text throughout the app
+Implement robust error handling
+Create a demo mode with pre-loaded data
+Include citations for all sources used
+Make the feedback system prominent to encourage user corrections
+Ensure the app works without requiring API keys for the basic functionality
