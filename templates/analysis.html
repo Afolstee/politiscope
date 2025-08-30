@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis in Progress - Political Discourse Analyzer{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5">
+                    <i class="fas fa-cogs text-primary me-3"></i>
+                    Analyzing Political Discourse
+                </h1>
+                <p class="lead text-muted">
+                    Processing texts for: <strong>{{ politician_name }}</strong>
+                    {% if country %} ({{ country }}){% endif %}
+                </p>
+            </div>
+
+            <!-- Progress Cards -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100" id="scraping-card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-search fa-3x text-primary" id="scraping-icon"></i>
+                            </div>
+                            <h5 class="card-title">Text Collection</h5>
+                            <p class="card-text text-muted">
+                                Gathering texts from Wikipedia, news sources, and government websites
+                            </p>
+                            <div class="progress mb-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     id="scraping-progress" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted" id="scraping-status">Initializing...</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100" id="analysis-card">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-brain fa-3x text-secondary" id="analysis-icon"></i>
+                            </div>
+                            <h5 class="card-title">NLP Analysis</h5>
+                            <p class="card-text text-muted">
+                                Processing collected texts using advanced natural language processing
+                            </p>
+                            <div class="progress mb-3">
+                                <div class="progress-bar progress-bar-striped" 
+                                     id="analysis-progress" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted" id="analysis-status">Waiting for texts...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Types -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Selected Analysis Types
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for analysis_type in analysis_types %}
+                        <div class="col-md-6 mb-2">
+                            <span class="badge bg-primary me-2">
+                                <i class="fas fa-check me-1"></i>
+                                {% if analysis_type == 'sentiment' %}Sentiment Analysis
+                                {% elif analysis_type == 'rhetorical' %}Rhetorical Analysis
+                                {% elif analysis_type == 'word_frequency' %}Word Frequency Analysis
+                                {% elif analysis_type == 'linguistic' %}Linguistic Features
+                                {% else %}{{ analysis_type|title }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Summary (Hidden initially) -->
+            <div class="card d-none" id="results-summary">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Collection Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h3 class="text-primary" id="total-sources">-</h3>
+                            <p class="text-muted">Sources Found</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-success" id="total-words">-</h3>
+                            <p class="text-muted">Total Words</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-info" id="processing-time">-</h3>
+                            <p class="text-muted">Processing Time</p>
+                        </div>
+                    </div>
+                    <div id="sources-list" class="mt-3">
+                        <h6>Sources:</h6>
+                        <ul id="sources-ul" class="list-group list-group-flush">
+                            <!-- Sources will be populated here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div class="alert alert-danger d-none" id="error-alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> <span id="error-message"></span>
+            </div>
+
+            <!-- Navigation -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Home
+                </a>
+                <button class="btn btn-success d-none" id="view-results-btn">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    View Results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let startTime = Date.now();
+    
+    // Start the analysis process
+    document.addEventListener('DOMContentLoaded', function() {
+        startAnalysis();
+    });
+    
+    async function startAnalysis() {
+        try {
+            // Step 1: Scrape texts
+            await scrapeTexts();
+            
+            // Step 2: Analyze texts
+            await analyzeTexts();
+            
+        } catch (error) {
+            showError(error.message);
+        }
+    }
+    
+    async function scrapeTexts() {
+        const scrapingCard = document.getElementById('scraping-card');
+        const scrapingIcon = document.getElementById('scraping-icon');
+        const scrapingProgress = document.getElementById('scraping-progress');
+        const scrapingStatus = document.getElementById('scraping-status');
+        
+        // Update UI
+        scrapingIcon.className = 'fas fa-spinner fa-spin fa-3x text-primary';
+        scrapingStatus.textContent = 'Searching for texts...';
+        
+        // Animate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress > 90) progress = 90;
+            scrapingProgress.style.width = progress + '%';
+        }, 500);
+        
+        try {
+            const response = await fetch('/api/scrape_texts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    politician_name: '{{ politician_name }}',
+                    country: '{{ country }}'
+                })
+            });
+            
+            const result = await response.json();
+            
+            clearInterval(progressInterval);
+            scrapingProgress.style.width = '100%';
+            
+            if (result.success) {
+                // Success
+                scrapingIcon.className = 'fas fa-check-circle fa-3x text-success';
+                scrapingStatus.textContent = 'Text collection completed!';
+                scrapingCard.classList.add('border-success');
+                
+                // Show summary
+                showResultsSummary(result);
+                
+                return result;
+            } else {
+                throw new Error(result.error || 'Unknown error during text collection');
+            }
+            
+        } catch (error) {
+            clearInterval(progressInterval);
+            scrapingIcon.className = 'fas fa-exclamation-triangle fa-3x text-danger';
+            scrapingStatus.textContent = 'Error during text collection';
+            scrapingCard.classList.add('border-danger');
+            throw error;
+        }
+    }
+    
+    async function analyzeTexts() {
+        const analysisCard = document.getElementById('analysis-card');
+        const analysisIcon = document.getElementById('analysis-icon');
+        const analysisProgress = document.getElementById('analysis-progress');
+        const analysisStatus = document.getElementById('analysis-status');
+        
+        // Update UI
+        analysisIcon.className = 'fas fa-spinner fa-spin fa-3x text-primary';
+        analysisProgress.classList.add('progress-bar-animated');
+        analysisStatus.textContent = 'Running NLP analysis...';
+        
+        // Animate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            analysisProgress.style.width = progress + '%';
+        }, 1000);
+        
+        try {
+            const response = await fetch('/api/analyze_texts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    analysis_types: {{ analysis_types | tojsonfilter }}
+                })
+            });
+            
+            const result = await response.json();
+            
+            clearInterval(progressInterval);
+            analysisProgress.style.width = '100%';
+            
+            if (result.success) {
+                // Success
+                analysisIcon.className = 'fas fa-check-circle fa-3x text-success';
+                analysisStatus.textContent = 'Analysis completed!';
+                analysisCard.classList.add('border-success');
+                
+                // Show view results button
+                document.getElementById('view-results-btn').classList.remove('d-none');
+                document.getElementById('view-results-btn').onclick = function() {
+                    window.location.href = '/results';
+                };
+                
+                // Update processing time
+                const processingTime = Math.round((Date.now() - startTime) / 1000);
+                document.getElementById('processing-time').textContent = processingTime + 's';
+                
+            } else {
+                throw new Error(result.error || 'Unknown error during analysis');
+            }
+            
+        } catch (error) {
+            clearInterval(progressInterval);
+            analysisIcon.className = 'fas fa-exclamation-triangle fa-3x text-danger';
+            analysisStatus.textContent = 'Error during analysis';
+            analysisCard.classList.add('border-danger');
+            throw error;
+        }
+    }
+    
+    function showResultsSummary(result) {
+        const summaryCard = document.getElementById('results-summary');
+        const totalSources = document.getElementById('total-sources');
+        const totalWords = document.getElementById('total-words');
+        const sourcesUl = document.getElementById('sources-ul');
+        
+        totalSources.textContent = result.total_sources;
+        totalWords.textContent = result.total_words.toLocaleString();
+        
+        // Populate sources list
+        sourcesUl.innerHTML = '';
+        result.texts.forEach(source => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `
+                <span>
+                    <i class="fas fa-globe me-2 text-muted"></i>
+                    ${source.source}
+                </span>
+                <span class="badge bg-primary rounded-pill">
+                    ${source.word_count || 0} words
+                </span>
+            `;
+            sourcesUl.appendChild(li);
+        });
+        
+        summaryCard.classList.remove('d-none');
+    }
+    
+    function showError(message) {
+        const errorAlert = document.getElementById('error-alert');
+        const errorMessage = document.getElementById('error-message');
+        
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('d-none');
+        
+        console.error('Analysis error:', message);
+    }
+</script>
+{% endblock %}

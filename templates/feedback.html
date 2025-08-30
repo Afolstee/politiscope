@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback - Political Discourse Analyzer{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5">
+                    <i class="fas fa-comment text-primary me-3"></i>
+                    Your Feedback
+                </h1>
+                <p class="lead text-muted">
+                    Help us improve the analysis for: <strong>{{ politician_name }}</strong>
+                </p>
+            </div>
+
+            <!-- Feedback Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>
+                        Rate This Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('feedback') }}">
+                        <!-- Rating -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                How would you rate the overall accuracy of this analysis?
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="rating-container mb-3">
+                                <div class="btn-group d-flex" role="group" aria-label="Rating">
+                                    {% for i in range(1, 6) %}
+                                    <input type="radio" class="btn-check" name="rating" 
+                                           id="rating{{ i }}" value="{{ i }}" required>
+                                    <label class="btn btn-outline-warning flex-fill" for="rating{{ i }}">
+                                        <i class="fas fa-star"></i>
+                                        {% if i == 1 %}Poor
+                                        {% elif i == 2 %}Fair
+                                        {% elif i == 3 %}Good
+                                        {% elif i == 4 %}Very Good
+                                        {% elif i == 5 %}Excellent
+                                        {% endif %}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Helpfulness -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                Was this analysis helpful for your research or understanding?
+                            </label>
+                            <div class="btn-group d-flex" role="group" aria-label="Helpful">
+                                <input type="radio" class="btn-check" name="helpful" id="helpful_yes" value="yes">
+                                <label class="btn btn-outline-success flex-fill" for="helpful_yes">
+                                    <i class="fas fa-thumbs-up me-2"></i>Yes, Very Helpful
+                                </label>
+                                <input type="radio" class="btn-check" name="helpful" id="helpful_no" value="no">
+                                <label class="btn btn-outline-danger flex-fill" for="helpful_no">
+                                    <i class="fas fa-thumbs-down me-2"></i>Not Really Helpful
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Comments -->
+                        <div class="mb-4">
+                            <label for="comments" class="form-label">
+                                Specific Comments or Corrections (Optional)
+                            </label>
+                            <textarea class="form-control" id="comments" name="comments" 
+                                      rows="4" placeholder="Please share any specific feedback about the accuracy of the analysis, missing insights, or suggestions for improvement..."></textarea>
+                            <div class="form-text">
+                                Your feedback helps us improve the accuracy and usefulness of our political discourse analysis.
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Submit Feedback
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="text-primary">
+                        <i class="fas fa-info-circle me-2"></i>
+                        How Your Feedback Helps
+                    </h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Improves accuracy of future analyses
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Helps identify areas needing better algorithms
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Contributes to academic research quality
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Ensures tool remains useful for researchers
+                        </li>
+                    </ul>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <strong>Privacy:</strong> Your feedback is used only for improving this tool. 
+                        No personal information is stored or shared.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('results') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Results
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-home me-2"></i>
+                    New Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Rating button styling
+    document.querySelectorAll('input[name="rating"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Reset all rating buttons
+            document.querySelectorAll('.rating-container label').forEach(label => {
+                label.classList.remove('btn-warning');
+                label.classList.add('btn-outline-warning');
+            });
+            
+            // Highlight selected rating and all below it
+            const selectedRating = parseInt(this.value);
+            for (let i = 1; i <= selectedRating; i++) {
+                const label = document.querySelector(`label[for="rating${i}"]`);
+                label.classList.remove('btn-outline-warning');
+                label.classList.add('btn-warning');
+            }
+        });
+    });
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const rating = document.querySelector('input[name="rating"]:checked');
+        
+        if (!rating) {
+            e.preventDefault();
+            alert('Please provide a rating before submitting your feedback.');
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+        submitBtn.disabled = true;
+    });
+
+    // Add hover effects to rating buttons
+    document.querySelectorAll('.rating-container label').forEach((label, index) => {
+        label.addEventListener('mouseenter', function() {
+            // Temporarily highlight up to hovered rating
+            for (let i = 0; i <= index; i++) {
+                const currentLabel = document.querySelectorAll('.rating-container label')[i];
+                if (!currentLabel.classList.contains('btn-warning')) {
+                    currentLabel.style.backgroundColor = '#fff3cd';
+                }
+            }
+        });
+        
+        label.addEventListener('mouseleave', function() {
+            // Remove temporary highlighting
+            document.querySelectorAll('.rating-container label').forEach(l => {
+                if (!l.classList.contains('btn-warning')) {
+                    l.style.backgroundColor = '';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

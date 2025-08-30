@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Results - Political Discourse Analyzer{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Results -->
+        <div class="col-lg-12">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5">
+                    <i class="fas fa-chart-bar text-success me-3"></i>
+                    Analysis Results
+                </h1>
+                <p class="lead">
+                    Political Discourse Analysis for: <strong class="text-primary">{{ politician_name }}</strong>
+                    {% if demo_mode %}
+                        <span class="badge bg-info ms-2">Demo Mode</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mb-4">
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-2"></i>New Analysis
+                    </a>
+                    <a href="{{ url_for('feedback') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-comment me-2"></i>Provide Feedback
+                    </a>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-2"></i>Export Results
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('export_results', format='json') }}">
+                                <i class="fas fa-file-code me-2"></i>Download JSON
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('export_results', format='csv') }}">
+                                <i class="fas fa-file-csv me-2"></i>Download CSV
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Tabs -->
+            <ul class="nav nav-tabs" id="resultsTab" role="tablist">
+                {% if results.sentiment %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="sentiment-tab" data-bs-toggle="tab" 
+                            data-bs-target="#sentiment-pane" type="button" role="tab">
+                        <i class="fas fa-heart me-2"></i>Sentiment Analysis
+                    </button>
+                </li>
+                {% endif %}
+                
+                {% if results.rhetorical %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if not results.sentiment %}active{% endif %}" 
+                            id="rhetorical-tab" data-bs-toggle="tab" 
+                            data-bs-target="#rhetorical-pane" type="button" role="tab">
+                        <i class="fas fa-theater-masks me-2"></i>Rhetorical Analysis
+                    </button>
+                </li>
+                {% endif %}
+                
+                {% if results.word_frequency %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if not results.sentiment and not results.rhetorical %}active{% endif %}" 
+                            id="frequency-tab" data-bs-toggle="tab" 
+                            data-bs-target="#frequency-pane" type="button" role="tab">
+                        <i class="fas fa-sort-numeric-down me-2"></i>Word Frequency
+                    </button>
+                </li>
+                {% endif %}
+                
+                {% if results.linguistic %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="linguistic-tab" data-bs-toggle="tab" 
+                            data-bs-target="#linguistic-pane" type="button" role="tab">
+                        <i class="fas fa-language me-2"></i>Linguistic Features
+                    </button>
+                </li>
+                {% endif %}
+                
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="sources-tab" data-bs-toggle="tab" 
+                            data-bs-target="#sources-pane" type="button" role="tab">
+                        <i class="fas fa-globe me-2"></i>Sources
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="resultsTabContent">
+                
+                <!-- Sentiment Analysis Tab -->
+                {% if results.sentiment %}
+                <div class="tab-pane fade show active" id="sentiment-pane" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-heart text-danger me-2"></i>
+                                Sentiment Analysis Results
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Overall Sentiment</h6>
+                                    <div class="mb-3">
+                                        {% set sentiment = results.sentiment.overall_sentiment %}
+                                        <span class="badge bg-{% if sentiment == 'Positive' %}success{% elif sentiment == 'Negative' %}danger{% else %}secondary{% endif %} fs-6">
+                                            {{ sentiment }}
+                                        </span>
+                                    </div>
+                                    
+                                    <h6>Sentiment Scores</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td>Polarity:</td>
+                                            <td><strong>{{ results.sentiment.polarity }}</strong> 
+                                                <small class="text-muted">(-1 to +1)</small>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Subjectivity:</td>
+                                            <td><strong>{{ results.sentiment.subjectivity }}</strong>
+                                                <small class="text-muted">(0 to 1)</small>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6>Sentiment Distribution</h6>
+                                    <div id="sentimentChart" style="height: 300px;"></div>
+                                </div>
+                            </div>
+                            
+                            {% if results.sentiment.sample_sentences %}
+                            <div class="mt-4">
+                                <h6>Sample Sentences</h6>
+                                <div class="row">
+                                    {% for sentence in results.sentiment.sample_sentences[:3] %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <p class="card-text">"{{ sentence.text[:100] }}{% if sentence.text|length > 100 %}...{% endif %}"</p>
+                                                <small class="text-muted">
+                                                    Polarity: 
+                                                    <span class="badge bg-{% if sentence.polarity > 0.1 %}success{% elif sentence.polarity < -0.1 %}danger{% else %}secondary{% endif %}">
+                                                        {{ "%.2f"|format(sentence.polarity) }}
+                                                    </span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Rhetorical Analysis Tab -->
+                {% if results.rhetorical %}
+                <div class="tab-pane fade {% if not results.sentiment %}show active{% endif %}" id="rhetorical-pane" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-theater-masks text-primary me-2"></i>
+                                Rhetorical Analysis Results
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Rhetorical Appeals Distribution</h6>
+                                    <div id="rhetoricalChart" style="height: 300px;"></div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6>Rhetorical Elements Found</h6>
+                                    
+                                    <div class="mb-3">
+                                        <strong>Ethos (Credibility):</strong>
+                                        <span class="badge bg-primary">{{ results.rhetorical.ethos.count }} instances</span>
+                                        <div class="mt-2">
+                                            {% for indicator in results.rhetorical.ethos.indicators[:5] %}
+                                                <span class="badge bg-outline-primary me-1">{{ indicator }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>Pathos (Emotion):</strong>
+                                        <span class="badge bg-danger">{{ results.rhetorical.pathos.count }} instances</span>
+                                        <div class="mt-2">
+                                            {% for indicator in results.rhetorical.pathos.indicators[:5] %}
+                                                <span class="badge bg-outline-danger me-1">{{ indicator }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong>Logos (Logic):</strong>
+                                        <span class="badge bg-success">{{ results.rhetorical.logos.count }} instances</span>
+                                        <div class="mt-2">
+                                            {% for indicator in results.rhetorical.logos.indicators[:5] %}
+                                                <span class="badge bg-outline-success me-1">{{ indicator }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if results.rhetorical.rhetorical_devices %}
+                            <div class="mt-4">
+                                <h6>Rhetorical Devices Detected</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for device in results.rhetorical.rhetorical_devices %}
+                                        <span class="badge bg-info">{{ device|title }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Word Frequency Tab -->
+                {% if results.word_frequency %}
+                <div class="tab-pane fade {% if not results.sentiment and not results.rhetorical %}show active{% endif %}" id="frequency-pane" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-sort-numeric-down text-info me-2"></i>
+                                Word Frequency Analysis
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Text Statistics</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td>Total Words:</td>
+                                            <td><strong>{{ "{:,}".format(results.word_frequency.total_words) }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Unique Words:</td>
+                                            <td><strong>{{ "{:,}".format(results.word_frequency.unique_words) }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Vocabulary Richness:</td>
+                                            <td><strong>{{ results.word_frequency.vocabulary_richness }}</strong></td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <h6 class="mt-4">Most Frequent Words</h6>
+                                    <div class="list-group">
+                                        {% for word, count in results.word_frequency.top_words[:10] %}
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>{{ word }}</span>
+                                            <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6>Word Frequency Chart</h6>
+                                    <div id="wordFrequencyChart" style="height: 400px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Linguistic Features Tab -->
+                {% if results.linguistic %}
+                <div class="tab-pane fade" id="linguistic-pane" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-language text-warning me-2"></i>
+                                Linguistic Features Analysis
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Text Complexity Metrics</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td>Total Sentences:</td>
+                                            <td><strong>{{ results.linguistic.text_statistics.sentences }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Average Sentence Length:</td>
+                                            <td><strong>{{ results.linguistic.text_statistics.avg_sentence_length }} words</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Average Word Length:</td>
+                                            <td><strong>{{ results.linguistic.text_statistics.avg_word_length }} characters</strong></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6>Readability Analysis</h6>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Flesch Reading Ease:</span>
+                                            <span class="badge bg-info fs-6">{{ results.linguistic.readability.flesch_score }}</span>
+                                        </div>
+                                        <small class="text-muted">Scale: 0-100 (higher = easier to read)</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Readability Level:</span>
+                                            <span class="badge bg-primary fs-6">{{ results.linguistic.readability.readability_level }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Total Syllables:</span>
+                                            <span class="badge bg-secondary fs-6">{{ results.linguistic.readability.total_syllables }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Sources Tab -->
+                <div class="tab-pane fade" id="sources-pane" role="tabpanel">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-globe text-success me-2"></i>
+                                Data Sources
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if source_breakdown %}
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h6>Sources Used in Analysis</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Source</th>
+                                                    <th>Word Count</th>
+                                                    <th>URL</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for source in source_breakdown %}
+                                                <tr>
+                                                    <td>
+                                                        <i class="fas fa-globe me-2 text-muted"></i>
+                                                        {{ source.source or 'Unknown Source' }}
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-primary">
+                                                            {{ "{:,}".format(source.word_count or 0) }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {% if source.url and source.url != 'sample_data' %}
+                                                            <a href="{{ source.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                                Visit
+                                                            </a>
+                                                        {% else %}
+                                                            <span class="text-muted">N/A</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <h6>Source Distribution</h6>
+                                    <div id="sourceChart" style="height: 300px;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Citation Note:</strong> When using this analysis in academic work, 
+                                    please cite the original sources listed above and mention the use of 
+                                    automated text analysis tools.
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No source information available</h5>
+                                <p class="text-muted">Source details were not recorded for this analysis.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Generate charts based on available data
+        
+        {% if results.sentiment %}
+        // Sentiment Distribution Chart
+        const sentimentData = [{
+            values: [{{ results.sentiment.sentiment_distribution.positive }}, 
+                    {{ results.sentiment.sentiment_distribution.neutral }}, 
+                    {{ results.sentiment.sentiment_distribution.negative }}],
+            labels: ['Positive', 'Neutral', 'Negative'],
+            type: 'pie',
+            marker: {
+                colors: ['#28a745', '#6c757d', '#dc3545']
+            }
+        }];
+        
+        Plotly.newPlot('sentimentChart', sentimentData, {
+            title: 'Sentiment Distribution (%)',
+            font: { size: 12 },
+            margin: { t: 50, b: 10, l: 10, r: 10 }
+        });
+        {% endif %}
+        
+        {% if results.rhetorical %}
+        // Rhetorical Appeals Chart
+        const rhetoricalData = [{
+            x: ['Ethos', 'Pathos', 'Logos'],
+            y: [{{ results.rhetorical.ethos.count }}, 
+                {{ results.rhetorical.pathos.count }}, 
+                {{ results.rhetorical.logos.count }}],
+            type: 'bar',
+            marker: {
+                color: ['#007bff', '#dc3545', '#28a745']
+            }
+        }];
+        
+        Plotly.newPlot('rhetoricalChart', rhetoricalData, {
+            title: 'Rhetorical Appeals Count',
+            xaxis: { title: 'Appeal Type' },
+            yaxis: { title: 'Frequency' },
+            font: { size: 12 },
+            margin: { t: 50, b: 50, l: 50, r: 10 }
+        });
+        {% endif %}
+        
+        {% if results.word_frequency %}
+        // Word Frequency Chart
+        const wordFreqData = [{
+            x: {{ results.word_frequency.visualization.word_frequency_chart.labels | tojsonfilter }},
+            y: {{ results.word_frequency.visualization.word_frequency_chart.values | tojsonfilter }},
+            type: 'bar',
+            marker: {
+                color: '#17a2b8'
+            }
+        }];
+        
+        Plotly.newPlot('wordFrequencyChart', wordFreqData, {
+            title: 'Top 10 Most Frequent Words',
+            xaxis: { title: 'Words', tickangle: -45 },
+            yaxis: { title: 'Frequency' },
+            font: { size: 12 },
+            margin: { t: 50, b: 100, l: 50, r: 10 }
+        });
+        {% endif %}
+        
+        {% if source_breakdown %}
+        // Source Distribution Chart
+        const sourceLabels = {{ source_breakdown | map(attribute='source') | list | tojsonfilter }};
+        const sourceValues = {{ source_breakdown | map(attribute='word_count') | list | tojsonfilter }};
+        
+        const sourceData = [{
+            values: sourceValues,
+            labels: sourceLabels,
+            type: 'pie',
+            textinfo: 'label+percent'
+        }];
+        
+        Plotly.newPlot('sourceChart', sourceData, {
+            title: 'Word Count by Source',
+            font: { size: 11 },
+            margin: { t: 50, b: 10, l: 10, r: 10 }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

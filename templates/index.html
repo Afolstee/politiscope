@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Political Discourse Analyzer{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-chart-line text-primary me-3"></i>
+                    Political Discourse Analyzer
+                </h1>
+                <p class="lead text-muted">
+                    Analyze political speeches, texts, and discourse using advanced NLP techniques
+                </p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    This tool provides academic-grade analysis suitable for research and graduate applications
+                </div>
+            </div>
+
+            <!-- Analysis Form -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-user-tie me-2"></i>
+                        Start Political Analysis
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('analyze') }}" id="analysisForm">
+                        <!-- Step 1: Politician Input -->
+                        <div class="mb-4">
+                            <h5 class="text-primary">
+                                <i class="fas fa-search me-2"></i>
+                                Step 1: Enter Politician Information
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label for="politician_name" class="form-label">
+                                        Politician Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="politician_name" 
+                                           name="politician_name" required
+                                           placeholder="e.g., Barack Obama, Winston Churchill"
+                                           pattern="[A-Za-z\s\-\.']+" 
+                                           title="Please enter a valid name (letters, spaces, hyphens, and periods only)">
+                                    <div class="form-text">
+                                        Enter the full name of the politician you want to analyze
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="country" class="form-label">Country/Region</label>
+                                    <select class="form-select" id="country" name="country">
+                                        <option value="">Any Country</option>
+                                        <option value="USA">United States</option>
+                                        <option value="UK">United Kingdom</option>
+                                        <option value="Canada">Canada</option>
+                                        <option value="Australia">Australia</option>
+                                        <option value="Germany">Germany</option>
+                                        <option value="France">France</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    <div class="form-text">
+                                        Optional: helps improve search results
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Step 2: Analysis Type Selection -->
+                        <div class="mb-4">
+                            <h5 class="text-primary">
+                                <i class="fas fa-brain me-2"></i>
+                                Step 2: Select Analysis Types
+                            </h5>
+                            <p class="text-muted">Choose one or more analysis types:</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="sentiment" 
+                                               name="analysis_types" value="sentiment" checked>
+                                        <label class="form-check-label" for="sentiment">
+                                            <strong>Sentiment Analysis</strong>
+                                            <br><small class="text-muted">
+                                                Analyze emotional tone and sentiment patterns
+                                            </small>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="rhetorical" 
+                                               name="analysis_types" value="rhetorical" checked>
+                                        <label class="form-check-label" for="rhetorical">
+                                            <strong>Rhetorical Analysis</strong>
+                                            <br><small class="text-muted">
+                                                Identify ethos, pathos, logos, and rhetorical devices
+                                            </small>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="word_frequency" 
+                                               name="analysis_types" value="word_frequency" checked>
+                                        <label class="form-check-label" for="word_frequency">
+                                            <strong>Word Frequency Analysis</strong>
+                                            <br><small class="text-muted">
+                                                Analyze most common words and vocabulary patterns
+                                            </small>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="linguistic" 
+                                               name="analysis_types" value="linguistic">
+                                        <label class="form-check-label" for="linguistic">
+                                            <strong>Linguistic Features</strong>
+                                            <br><small class="text-muted">
+                                                Analyze complexity, readability, and formality
+                                            </small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-rocket me-2"></i>
+                                Start Analysis
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Start Guide -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>
+                        How It Works
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-search fa-2x"></i>
+                            </div>
+                            <h6>Text Collection</h6>
+                            <small class="text-muted">
+                                Automatically gathers political texts from Wikipedia and news sources
+                            </small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-cogs fa-2x"></i>
+                            </div>
+                            <h6>NLP Processing</h6>
+                            <small class="text-muted">
+                                Uses advanced natural language processing for analysis
+                            </small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-chart-bar fa-2x"></i>
+                            </div>
+                            <h6>Visualizations</h6>
+                            <small class="text-muted">
+                                Interactive charts and graphs for easy interpretation
+                            </small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-download fa-2x"></i>
+                            </div>
+                            <h6>Export Results</h6>
+                            <small class="text-muted">
+                                Download analysis in JSON or CSV format for further research
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Politicians -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Sample Politicians for Testing
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>US Politicians:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-user me-2 text-muted"></i>Barack Obama</li>
+                                <li><i class="fas fa-user me-2 text-muted"></i>Joe Biden</li>
+                                <li><i class="fas fa-user me-2 text-muted"></i>Donald Trump</li>
+                                <li><i class="fas fa-user me-2 text-muted"></i>Hillary Clinton</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>International Politicians:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-user me-2 text-muted"></i>Winston Churchill</li>
+                                <li><i class="fas fa-user me-2 text-muted"></i>Angela Merkel</li>
+                                <li><i class="fas fa-user me-2 text-muted"></i>Justin Trudeau</li>
+                                <li><i class="fas fa-user me-2 text-muted"></i>Emmanuel Macron</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Note:</strong> This tool is for academic research purposes. 
+                        Please respect website terms of service and use responsibly.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation
+    document.getElementById('analysisForm').addEventListener('submit', function(e) {
+        const checkboxes = document.querySelectorAll('input[name="analysis_types"]:checked');
+        if (checkboxes.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one analysis type.');
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Starting Analysis...';
+        submitBtn.disabled = true;
+    });
+
+    // Sample politician quick-select
+    document.querySelectorAll('.list-unstyled li').forEach(item => {
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', function() {
+            const name = this.textContent.trim();
+            document.getElementById('politician_name').value = name;
+            
+            // Set appropriate country
+            if (['Barack Obama', 'Joe Biden', 'Donald Trump', 'Hillary Clinton'].includes(name)) {
+                document.getElementById('country').value = 'USA';
+            } else if (name === 'Winston Churchill') {
+                document.getElementById('country').value = 'UK';
+            } else if (name === 'Angela Merkel') {
+                document.getElementById('country').value = 'Germany';
+            } else if (name === 'Justin Trudeau') {
+                document.getElementById('country').value = 'Canada';
+            } else if (name === 'Emmanuel Macron') {
+                document.getElementById('country').value = 'France';
+            }
+        });
+    });
+</script>
+{% endblock %}
