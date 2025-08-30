@@ -479,9 +479,12 @@
         
         {% if results.word_frequency %}
         // Word Frequency Chart
+        const wordFreqLabels = [{% for word, count in results.word_frequency.top_words[:10] %}"{{ word }}"{% if not loop.last %},{% endif %}{% endfor %}];
+        const wordFreqValues = [{% for word, count in results.word_frequency.top_words[:10] %}{{ count }}{% if not loop.last %},{% endif %}{% endfor %}];
+        
         const wordFreqData = [{
-            x: {{ results.word_frequency.visualization.word_frequency_chart.labels | tojson }},
-            y: {{ results.word_frequency.visualization.word_frequency_chart.values | tojson }},
+            x: wordFreqLabels,
+            y: wordFreqValues,
             type: 'bar',
             marker: {
                 color: '#17a2b8'
