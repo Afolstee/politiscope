@@ -84,8 +84,20 @@ def scrape_texts():
         scraper = PoliticalTextScraper()
         texts = scraper.collect_texts(politician_name, country)
         
-        # Store in session for analysis
-        session['collected_texts'] = texts
+        # Store in session for analysis - limit content size to avoid session cookie overflow
+        limited_texts = []
+        for text in texts:
+            limited_text = text.copy()
+            # Limit content to 1000 characters per source to avoid session overflow
+            if 'content' in limited_text:
+                limited_text['content'] = limited_text['content'][:1000]
+            limited_texts.append(limited_text)
+        
+        session['collected_texts'] = limited_texts
+        # Also store full texts temporarily in memory for immediate analysis
+        if not hasattr(app, '_temp_texts'):
+            app._temp_texts = {}
+        app._temp_texts[session.get('session_id', 'default')] = texts
         
         return jsonify({
             'success': True,
@@ -108,8 +120,19 @@ def analyze_texts():
         data = request.get_json()
         analysis_types = data.get('analysis_types', [])
         
-        texts = session.get('collected_texts', [])
+        # Try to get full texts from temporary storage first, fallback to session
+        session_id = session.get('session_id', 'default')
+        texts = []
+        
+        if hasattr(app, '_temp_texts') and session_id in app._temp_texts:
+            texts = app._temp_texts[session_id]
+            logging.info(f"Using full texts from temp storage: {len(texts)} sources")
+        else:
+            texts = session.get('collected_texts', [])
+            logging.info(f"Using texts from session: {len(texts)} sources")
+            
         if not texts:
+            logging.error("No texts found in session or temp storage")
             return jsonify({
                 'success': False,
                 'error': 'No texts found. Please scrape texts first.'
@@ -132,9 +155,23 @@ def analyze_texts():
         if 'linguistic' in analysis_types:
             results['linguistic'] = analyzer.analyze_linguistic_features(combined_text)
         
-        # Store results in session
+        # Store results in session with limited content
         session['analysis_results'] = results
-        session['source_breakdown'] = texts
+        
+        # Store limited source breakdown to avoid session overflow
+        limited_breakdown = []
+        for text in texts:
+            limited_source = {
+                'source': text.get('source', 'Unknown'),
+                'word_count': text.get('word_count', 0),
+                'url': text.get('url', '')
+            }
+            limited_breakdown.append(limited_source)
+        session['source_breakdown'] = limited_breakdown
+        
+        # Clean up temp storage
+        if hasattr(app, '_temp_texts') and session_id in app._temp_texts:
+            del app._temp_texts[session_id]
         
         return jsonify({
             'success': True,
