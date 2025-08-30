@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+import re
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
@@ -200,6 +201,91 @@ def results():
                          results=results,
                          politician_name=politician_name,
                          source_breakdown=source_breakdown)
+
+@app.route('/detailed_analysis')
+def detailed_analysis():
+    """Display detailed analysis with highlighted texts"""
+    results = session.get('analysis_results')
+    politician_name = session.get('politician_name')
+    
+    if not results:
+        flash('No analysis results found. Please start a new analysis.', 'error')
+        return redirect(url_for('index'))
+    
+    # Get the original texts for highlighting
+    analyzed_texts = session.get('analyzed_texts_with_highlights', [])
+    
+    # If we don't have highlighted texts, generate them
+    if not analyzed_texts:
+        analyzed_texts = generate_highlighted_texts()
+        session['analyzed_texts_with_highlights'] = analyzed_texts
+    
+    return render_template('detailed_analysis.html',
+                         politician_name=politician_name,
+                         analyzed_texts=analyzed_texts,
+                         demo_mode=session.get('demo_mode', False))
+
+def generate_highlighted_texts():
+    """Generate highlighted text analysis for detailed view"""
+    try:
+        # Get original texts from session
+        texts = session.get('collected_texts', [])
+        results = session.get('analysis_results', {})
+        
+        analyzed_texts = []
+        
+        for i, text_source in enumerate(texts):
+            content = text_source.get('content', '')
+            
+            # Apply highlighting based on analysis results
+            highlighted_content = highlight_text_content(content, results)
+            
+            analyzed_texts.append({
+                'source': text_source.get('source', f'Source {i+1}'),
+                'url': text_source.get('url', ''),
+                'word_count': len(content.split()),
+                'highlighted_content': highlighted_content
+            })
+        
+        return analyzed_texts
+        
+    except Exception as e:
+        logging.error(f"Error generating highlighted texts: {str(e)}")
+        return []
+
+def highlight_text_content(content, results):
+    """Apply highlighting to text content based on analysis results"""
+    try:
+        # Start with original content
+        highlighted = content
+        
+        # Get keywords for highlighting
+        sentiment_keywords = ['hope', 'change', 'fear', 'anger', 'love', 'hate', 'proud', 'concern']
+        ethos_keywords = ['experience', 'qualified', 'trust', 'believe', 'promise', 'commitment']
+        pathos_keywords = ['family', 'children', 'future', 'dream', 'struggle', 'fight']
+        logos_keywords = ['evidence', 'facts', 'statistics', 'research', 'data', 'study']
+        key_phrases = ['america', 'american', 'democracy', 'freedom', 'justice', 'equality']
+        
+        # Apply highlighting with different classes
+        highlighted = apply_highlights(highlighted, sentiment_keywords, 'sentiment-positive')
+        highlighted = apply_highlights(highlighted, ethos_keywords, 'rhetorical-ethos')
+        highlighted = apply_highlights(highlighted, pathos_keywords, 'rhetorical-pathos')
+        highlighted = apply_highlights(highlighted, logos_keywords, 'rhetorical-logos')
+        highlighted = apply_highlights(highlighted, key_phrases, 'key-phrase')
+        
+        return highlighted
+        
+    except Exception as e:
+        logging.error(f"Error highlighting content: {str(e)}")
+        return content
+
+def apply_highlights(text, keywords, css_class):
+    """Apply highlighting to specific keywords in text"""
+    for keyword in keywords:
+        pattern = re.compile(r'\b' + re.escape(keyword) + r'\b', re.IGNORECASE)
+        replacement = f'<span class="text-highlight {css_class} annotation">{keyword}<div class="annotation-tooltip">{css_class.replace("-", " ").title()}</div></span>'
+        text = pattern.sub(replacement, text)
+    return text
 
 @app.route('/feedback', methods=['GET', 'POST'])
 def feedback():

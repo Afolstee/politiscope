@@ -236,11 +236,14 @@ class PoliticalAnalyzer:
                 'word_cloud_data': dict(top_words[:50])  # Top 50 for word cloud
             }
             
+            # Ensure all data is JSON serializable
+            serializable_top_words = [(str(word), int(count)) for word, count in top_words]
+            
             return {
-                'top_words': top_words,
-                'total_words': total_words,
-                'unique_words': unique_words,
-                'vocabulary_richness': vocabulary_richness,
+                'top_words': serializable_top_words,
+                'total_words': int(total_words),
+                'unique_words': int(unique_words),
+                'vocabulary_richness': float(vocabulary_richness),
                 'visualization': viz_data
             }
             
