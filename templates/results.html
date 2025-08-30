@@ -477,8 +477,8 @@
         {% if results.word_frequency %}
         // Word Frequency Chart
         const wordFreqData = [{
-            x: {{ results.word_frequency.visualization.word_frequency_chart.labels | tojsonfilter }},
-            y: {{ results.word_frequency.visualization.word_frequency_chart.values | tojsonfilter }},
+            x: {{ results.word_frequency.visualization.word_frequency_chart.labels | tojson }},
+            y: {{ results.word_frequency.visualization.word_frequency_chart.values | tojson }},
             type: 'bar',
             marker: {
                 color: '#17a2b8'
@@ -496,8 +496,8 @@
         
         {% if source_breakdown %}
         // Source Distribution Chart
-        const sourceLabels = {{ source_breakdown | map(attribute='source') | list | tojsonfilter }};
-        const sourceValues = {{ source_breakdown | map(attribute='word_count') | list | tojsonfilter }};
+        const sourceLabels = {{ source_breakdown | map(attribute='source') | list | tojson }};
+        const sourceValues = {{ source_breakdown | map(attribute='word_count') | list | tojson }};
         
         const sourceData = [{
             values: sourceValues,
