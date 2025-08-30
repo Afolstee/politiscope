@@ -10,21 +10,30 @@ import plotly.graph_objects as go
 import plotly.express as px
 import json
 
-# Download required NLTK data
+# Try to download required NLTK data, but don't fail if network is unavailable
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
-    nltk.download('punkt')
+    try:
+        nltk.download('punkt')
+    except Exception:
+        logging.warning("Could not download NLTK punkt tokenizer")
 
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
-    nltk.download('stopwords')
+    try:
+        nltk.download('stopwords')
+    except Exception:
+        logging.warning("Could not download NLTK stopwords")
 
 try:
     nltk.data.find('taggers/averaged_perceptron_tagger')
 except LookupError:
-    nltk.download('averaged_perceptron_tagger')
+    try:
+        nltk.download('averaged_perceptron_tagger')
+    except Exception:
+        logging.warning("Could not download NLTK POS tagger")
 
 class PoliticalAnalyzer:
     def __init__(self):
@@ -34,7 +43,24 @@ class PoliticalAnalyzer:
             logging.warning("spaCy model not found. Some features may be limited.")
             self.nlp = None
         
-        self.stop_words = set(nltk.corpus.stopwords.words('english'))
+        # Try to load NLTK stopwords, use fallback if not available
+        try:
+            self.stop_words = set(nltk.corpus.stopwords.words('english'))
+        except (LookupError, OSError):
+            # Fallback list of common English stopwords
+            self.stop_words = {
+                'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+                'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
+                'to', 'was', 'will', 'with', 'the', 'this', 'but', 'they', 'have',
+                'had', 'what', 'said', 'each', 'which', 'their', 'time', 'if',
+                'up', 'out', 'many', 'then', 'them', 'these', 'so', 'some', 'her',
+                'would', 'make', 'like', 'into', 'him', 'has', 'two', 'more',
+                'very', 'what', 'know', 'just', 'first', 'get', 'over', 'think',
+                'also', 'your', 'work', 'life', 'only', 'can', 'still', 'should',
+                'after', 'being', 'now', 'made', 'before', 'here', 'through',
+                'when', 'where', 'how', 'all', 'during', 'there', 'our', 'his'
+            }
+            logging.warning("Using fallback stopwords list")
         
         # Political rhetoric indicators
         self.ethos_words = [
@@ -264,8 +290,15 @@ class PoliticalAnalyzer:
         """Analyze linguistic features like complexity and readability"""
         try:
             text = self.clean_text(text)
-            sentences = nltk.sent_tokenize(text)
-            words = nltk.word_tokenize(text)
+            
+            # Try NLTK tokenizers, use fallback if not available
+            try:
+                sentences = nltk.sent_tokenize(text)
+                words = nltk.word_tokenize(text)
+            except (LookupError, OSError):
+                # Simple fallback tokenization
+                sentences = [s.strip() for s in re.split(r'[.!?]+', text) if s.strip()]
+                words = re.findall(r'\b\w+\b', text)
             
             # Basic statistics
             num_sentences = len(sentences)

@@ -1,0 +1,87 @@
+(.venv) PS C:\Users\USER\Desktop\projects\PolitiScope> python main.py
+[nltk_data] Error loading punkt: <urlopen error [WinError 10060] A
+[nltk_data]     connection attempt failed because the connected party
+[nltk_data]     did not properly respond after a period of time, or
+[nltk_data]     established connection failed because connected host
+[nltk_data]     has failed to respond>
+[nltk_data] Error loading stopwords: <urlopen error [WinError 10060] A
+[nltk_data]     connection attempt failed because the connected party
+[nltk_data]     did not properly respond after a period of time, or
+[nltk_data]     established connection failed because connected host
+[nltk_data]     has failed to respond>
+[nltk_data] Error loading averaged_perceptron_tagger: <urlopen error
+[nltk_data]     [WinError 10060] A connection attempt failed because
+[nltk_data]     the connected party did not properly respond after a
+[nltk_data]     period of time, or established connection failed
+[nltk_data]     because connected host has failed to respond>
+WARNING:root:spaCy model not found. Some features may be limited.
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\projects\PolitiScope\.venv\Lib\site-packages\nltk\corpus\util.py", line 84, in __load       
+    root = nltk.data.find(f"{self.subdir}/{zip_name}")       
+  File "C:\Users\USER\Desktop\projects\PolitiScope\.venv\Lib\site-packages\nltk\data.py", line 579, in find
+    raise LookupError(resource_not_found)
+LookupError:
+**********************************************************************
+  Resource stopwords not found.
+  Please use the NLTK Downloader to obtain the resource:     
+
+  >>> import nltk
+  >>> nltk.download('stopwords')
+
+  For more information see: https://www.nltk.org/data.html   
+
+  Attempted to load corpora/stopwords.zip/stopwords/
+
+  Searched in:
+    - 'C:\\Users\\USER/nltk_data'
+    - 'C:\\Users\\USER\\Desktop\\projects\\PolitiScope\\.venv\\nltk_data'
+    - 'C:\\Users\\USER\\Desktop\\projects\\PolitiScope\\.venv\\share\\nltk_data'
+    - 'C:\\Users\\USER\\Desktop\\projects\\PolitiScope\\.venv\\lib\\nltk_data'
+    - 'C:\\Users\\USER\\AppData\\Roaming\\nltk_data'
+    - 'C:\\nltk_data'
+    - 'D:\\nltk_data'
+    - 'E:\\nltk_data'
+**********************************************************************
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\projects\PolitiScope\main.py", line 1, in <module>
+    from app import app
+  File "C:\Users\USER\Desktop\projects\PolitiScope\app.py", line 42, in <module>
+    analyzer = PoliticalAnalyzer()
+  File "C:\Users\USER\Desktop\projects\PolitiScope\analyzer.py", line 37, in __init__
+    self.stop_words = set(nltk.corpus.stopwords.words('english'))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^        
+  File "C:\Users\USER\Desktop\projects\PolitiScope\.venv\Lib\site-packages\nltk\corpus\util.py", line 120, in __getattr__ 
+    self.__load()
+    ~~~~~~~~~~~^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\.venv\Lib\site-packages\nltk\corpus\util.py", line 86, in __load       
+    raise e
+  File "C:\Users\USER\Desktop\projects\PolitiScope\.venv\Lib\site-packages\nltk\corpus\util.py", line 81, in __load       
+    root = nltk.data.find(f"{self.subdir}/{self.__name}")    
+  File "C:\Users\USER\Desktop\projects\PolitiScope\.venv\Lib\site-packages\nltk\data.py", line 579, in find
+    raise LookupError(resource_not_found)
+LookupError:
+**********************************************************************
+  Resource stopwords not found.
+  Please use the NLTK Downloader to obtain the resource:     
+
+  >>> import nltk
+  >>> nltk.download('stopwords')
+
+  For more information see: https://www.nltk.org/data.html   
+
+  Attempted to load corpora/stopwords
+
+  Searched in:
+    - 'C:\\Users\\USER/nltk_data'
+    - 'C:\\Users\\USER\\Desktop\\projects\\PolitiScope\\.venv\\nltk_data'
+    - 'C:\\Users\\USER\\Desktop\\projects\\PolitiScope\\.venv\\share\\nltk_data'
+    - 'C:\\Users\\USER\\Desktop\\projects\\PolitiScope\\.venv\\lib\\nltk_data'
+    - 'C:\\Users\\USER\\AppData\\Roaming\\nltk_data'
+    - 'C:\\nltk_data'
+    - 'D:\\nltk_data'
+    - 'E:\\nltk_data'
+**********************************************************************
