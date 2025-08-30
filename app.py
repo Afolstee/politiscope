@@ -339,12 +339,14 @@ def export_results(format):
         }
         
         if format.lower() == 'json':
+            # Clean politician name for filename
+            safe_name = re.sub(r'[^\w\s-]', '', politician_name or 'analysis').replace(' ', '_')
             response = app.response_class(
-                response=json.dumps(export_data, indent=2),
+                response=json.dumps(export_data, indent=2, default=str),
                 status=200,
                 mimetype='application/json'
             )
-            response.headers['Content-Disposition'] = f'attachment; filename="{politician_name}_analysis.json"'
+            response.headers['Content-Disposition'] = f'attachment; filename="{safe_name}_analysis.json"'
             return response
         
         elif format.lower() == 'csv':
@@ -369,12 +371,14 @@ def export_results(format):
                 for word, count in word_freq.get('top_words', [])[:10]:
                     writer.writerow(['Top Word', word, count])
             
+            # Clean politician name for filename
+            safe_name = re.sub(r'[^\w\s-]', '', politician_name or 'analysis').replace(' ', '_')
             response = app.response_class(
                 response=output.getvalue(),
                 status=200,
                 mimetype='text/csv'
             )
-            response.headers['Content-Disposition'] = f'attachment; filename="{politician_name}_analysis.csv"'
+            response.headers['Content-Disposition'] = f'attachment; filename="{safe_name}_analysis.csv"'
             return response
         
         else:
