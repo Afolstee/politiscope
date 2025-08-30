@@ -120,11 +120,11 @@ class PoliticalAnalyzer:
             }
             
             return {
-                'overall_sentiment': overall_sentiment,
-                'polarity': round(polarity, 3),
-                'subjectivity': round(subjectivity, 3),
+                'overall_sentiment': str(overall_sentiment),
+                'polarity': float(round(polarity, 3)),
+                'subjectivity': float(round(subjectivity, 3)),
                 'sentiment_distribution': sentiment_distribution,
-                'sample_sentences': sentence_sentiments[:5],
+                'sample_sentences': [{'text': str(s['text']), 'polarity': float(s['polarity'])} for s in sentence_sentiments[:5]],
                 'visualization': viz_data
             }
             
@@ -177,21 +177,21 @@ class PoliticalAnalyzer:
             
             return {
                 'ethos': {
-                    'count': ethos_count,
-                    'percentage': ethos_percentage,
-                    'indicators': list(set(ethos_found))[:10]
+                    'count': int(ethos_count),
+                    'percentage': float(ethos_percentage),
+                    'indicators': [str(word) for word in list(set(ethos_found))[:10]]
                 },
                 'pathos': {
-                    'count': pathos_count,
-                    'percentage': pathos_percentage,
-                    'indicators': list(set(pathos_found))[:10]
+                    'count': int(pathos_count),
+                    'percentage': float(pathos_percentage),
+                    'indicators': [str(word) for word in list(set(pathos_found))[:10]]
                 },
                 'logos': {
-                    'count': logos_count,
-                    'percentage': logos_percentage,
-                    'indicators': list(set(logos_found))[:10]
+                    'count': int(logos_count),
+                    'percentage': float(logos_percentage),
+                    'indicators': [str(word) for word in list(set(logos_found))[:10]]
                 },
-                'rhetorical_devices': devices_found,
+                'rhetorical_devices': [str(device) for device in devices_found],
                 'visualization': viz_data
             }
             
@@ -226,14 +226,17 @@ class PoliticalAnalyzer:
             unique_words = len(set(words))
             vocabulary_richness = round((unique_words / total_words), 3) if total_words > 0 else 0
             
-            # Create visualization data
+            # Create visualization data - ensure all values are JSON serializable
+            labels = [str(word) for word, count in top_words[:10]]
+            values = [int(count) for word, count in top_words[:10]]
+            
             viz_data = {
                 'word_frequency_chart': {
-                    'labels': [word for word, count in top_words[:10]],
-                    'values': [count for word, count in top_words[:10]],
+                    'labels': labels,
+                    'values': values,
                     'type': 'bar'
                 },
-                'word_cloud_data': dict(top_words[:50])  # Top 50 for word cloud
+                'word_cloud_data': {str(word): int(count) for word, count in top_words[:50]}
             }
             
             # Ensure all data is JSON serializable
@@ -314,16 +317,16 @@ class PoliticalAnalyzer:
             
             return {
                 'text_statistics': {
-                    'sentences': num_sentences,
-                    'words': num_words,
-                    'characters': num_chars,
-                    'avg_sentence_length': avg_sentence_length,
-                    'avg_word_length': avg_word_length
+                    'sentences': int(num_sentences),
+                    'words': int(num_words),
+                    'characters': int(num_chars),
+                    'avg_sentence_length': float(avg_sentence_length),
+                    'avg_word_length': float(avg_word_length)
                 },
                 'readability': {
-                    'flesch_score': flesch_score,
-                    'readability_level': readability,
-                    'total_syllables': total_syllables
+                    'flesch_score': float(flesch_score),
+                    'readability_level': str(readability),
+                    'total_syllables': int(total_syllables)
                 }
             }
             
