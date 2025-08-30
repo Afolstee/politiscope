@@ -246,7 +246,7 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    analysis_types: {{ analysis_types | tojsonfilter }}
+                    analysis_types: {{ analysis_types | tojson }}
                 })
             });
             

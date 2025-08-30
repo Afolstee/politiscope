@@ -52,8 +52,7 @@ class PoliticalTextScraper:
                 }
         except Exception as e:
             logging.error(f"Error searching Wikipedia for {politician_name}: {str(e)}")
-        
-        return None
+            return None
 
     def search_news_sources(self, politician_name: str) -> List[Dict]:
         """Search basic news sources"""

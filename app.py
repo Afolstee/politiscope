@@ -177,14 +177,13 @@ def feedback():
             helpful = request.form.get('helpful') == 'yes'
             
             # Create feedback record
-            feedback_record = models.Feedback(
-                session_id=session_id,
-                politician_name=politician_name,
-                rating=int(rating) if rating else None,
-                comments=comments,
-                helpful=helpful,
-                timestamp=datetime.utcnow()
-            )
+            feedback_record = models.Feedback()
+            feedback_record.session_id = session_id
+            feedback_record.politician_name = politician_name
+            feedback_record.rating = int(rating) if rating else None
+            feedback_record.comments = comments
+            feedback_record.helpful = helpful
+            feedback_record.timestamp = datetime.utcnow()
             
             db.session.add(feedback_record)
             db.session.commit()
@@ -278,9 +277,21 @@ def demo():
             }
         },
         'rhetorical': {
-            'ethos_indicators': ['experience', 'leadership', 'trust'],
-            'pathos_indicators': ['hope', 'change', 'together'],
-            'logos_indicators': ['evidence', 'statistics', 'facts'],
+            'ethos': {
+                'count': 15,
+                'percentage': 2.1,
+                'indicators': ['experience', 'leadership', 'trust']
+            },
+            'pathos': {
+                'count': 22,
+                'percentage': 3.2,
+                'indicators': ['hope', 'change', 'together']
+            },
+            'logos': {
+                'count': 8,
+                'percentage': 1.1,
+                'indicators': ['evidence', 'statistics', 'facts']
+            },
             'rhetorical_devices': ['repetition', 'metaphor', 'alliteration']
         },
         'word_frequency': {
