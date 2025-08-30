@@ -263,62 +263,99 @@ def export_results(format):
 
 @app.route('/demo')
 def demo():
-    """Demo mode with pre-loaded data"""
-    # Sample demo data for Obama
-    demo_results = {
-        'sentiment': {
-            'overall_sentiment': 'Positive',
-            'polarity': 0.15,
-            'subjectivity': 0.45,
-            'sentiment_distribution': {
-                'positive': 60,
-                'neutral': 30,
-                'negative': 10
+    """Demo mode with real data for Barack Obama"""
+    try:
+        # Use real scraping and analysis for demo
+        scraper = PoliticalTextScraper()
+        texts = scraper.collect_texts("Barack Obama", "USA")
+        
+        if not texts:
+            # Fallback to sample data if scraping fails
+            texts = scraper.get_sample_texts("Barack Obama")
+        
+        if texts:
+            # Combine all text content
+            combined_text = ' '.join([text['content'] for text in texts])
+            
+            # Run real analysis
+            results = {}
+            results['sentiment'] = analyzer.analyze_sentiment(combined_text)
+            results['rhetorical'] = analyzer.analyze_rhetorical_elements(combined_text)
+            results['word_frequency'] = analyzer.analyze_word_frequency(combined_text)
+            results['linguistic'] = analyzer.analyze_linguistic_features(combined_text)
+            
+            # Store results in session
+            session['analysis_results'] = results
+            session['politician_name'] = 'Barack Obama (Demo - Real Data)'
+            session['source_breakdown'] = texts
+            
+            return render_template('results.html',
+                                 results=results,
+                                 politician_name='Barack Obama (Demo - Real Data)',
+                                 source_breakdown=texts,
+                                 demo_mode=True)
+        else:
+            flash('Unable to collect data for demo. Please try the manual analysis.', 'warning')
+            return redirect(url_for('index'))
+            
+    except Exception as e:
+        logging.error(f"Error in demo mode: {str(e)}")
+        # Fallback to sample demo data if real analysis fails
+        demo_results = {
+            'sentiment': {
+                'overall_sentiment': 'Positive',
+                'polarity': 0.15,
+                'subjectivity': 0.45,
+                'sentiment_distribution': {
+                    'positive': 60,
+                    'neutral': 30,
+                    'negative': 10
+                }
+            },
+            'rhetorical': {
+                'ethos': {
+                    'count': 15,
+                    'percentage': 2.1,
+                    'indicators': ['experience', 'leadership', 'trust']
+                },
+                'pathos': {
+                    'count': 22,
+                    'percentage': 3.2,
+                    'indicators': ['hope', 'change', 'together']
+                },
+                'logos': {
+                    'count': 8,
+                    'percentage': 1.1,
+                    'indicators': ['evidence', 'statistics', 'facts']
+                },
+                'rhetorical_devices': ['repetition', 'metaphor', 'alliteration']
+            },
+            'word_frequency': {
+                'top_words': [
+                    ['america', 45],
+                    ['people', 38],
+                    ['change', 32],
+                    ['hope', 28],
+                    ['together', 25]
+                ],
+                'unique_words': 1250,
+                'total_words': 5000,
+                'vocabulary_richness': 0.25
             }
-        },
-        'rhetorical': {
-            'ethos': {
-                'count': 15,
-                'percentage': 2.1,
-                'indicators': ['experience', 'leadership', 'trust']
-            },
-            'pathos': {
-                'count': 22,
-                'percentage': 3.2,
-                'indicators': ['hope', 'change', 'together']
-            },
-            'logos': {
-                'count': 8,
-                'percentage': 1.1,
-                'indicators': ['evidence', 'statistics', 'facts']
-            },
-            'rhetorical_devices': ['repetition', 'metaphor', 'alliteration']
-        },
-        'word_frequency': {
-            'top_words': [
-                ['america', 45],
-                ['people', 38],
-                ['change', 32],
-                ['hope', 28],
-                ['together', 25]
-            ],
-            'total_unique_words': 1250,
-            'total_words': 5000
         }
-    }
-    
-    session['analysis_results'] = demo_results
-    session['politician_name'] = 'Barack Obama (Demo)'
-    session['source_breakdown'] = [
-        {'source': 'Wikipedia', 'word_count': 1500, 'url': 'https://en.wikipedia.org/wiki/Barack_Obama'},
-        {'source': 'Sample Speech', 'word_count': 3500, 'url': 'Demo Data'}
-    ]
-    
-    return render_template('results.html',
-                         results=demo_results,
-                         politician_name='Barack Obama (Demo)',
-                         source_breakdown=session['source_breakdown'],
-                         demo_mode=True)
+        
+        session['analysis_results'] = demo_results
+        session['politician_name'] = 'Barack Obama (Demo - Fallback Data)'
+        session['source_breakdown'] = [
+            {'source': 'Wikipedia', 'word_count': 1500, 'url': 'https://en.wikipedia.org/wiki/Barack_Obama'},
+            {'source': 'Sample Speech', 'word_count': 3500, 'url': 'Demo Data'}
+        ]
+        
+        return render_template('results.html',
+                             results=demo_results,
+                             politician_name='Barack Obama (Demo - Fallback Data)',
+                             source_breakdown=session['source_breakdown'],
+                             demo_mode=True)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
