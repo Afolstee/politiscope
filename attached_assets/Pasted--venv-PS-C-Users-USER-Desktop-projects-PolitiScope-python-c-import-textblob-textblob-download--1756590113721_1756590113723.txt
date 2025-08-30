@@ -1,0 +1,110 @@
+(venv) PS C:\Users\USER\Desktop\projects\PolitiScope> python -c "import textblob; textblob.download_corpora()"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+AttributeError: module 'textblob' has no attribute 'download_corpora'
+(venv) PS C:\Users\USER\Desktop\projects\PolitiScope> python -m spacy download en_core_web_sm
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connectionpool.py", line 464, in _make_request      
+    self._validate_conn(conn)
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connectionpool.py", line 1093, in _validate_conn    
+    conn.connect()
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connection.py", line 790, in connect
+    sock_and_verified = _ssl_wrap_socket_and_match_hostname(       
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connection.py", line 969, in _ssl_wrap_socket_and_match_hostname
+    ssl_sock = ssl_wrap_socket(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\util\ssl_.py", line 480, in ssl_wrap_socket
+    ssl_sock = _ssl_wrap_socket_impl(sock, context, tls_in_tls, server_hostname)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\util\ssl_.py", line 524, in _ssl_wrap_socket_impl   
+    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\ssl.py", line 455, in wrap_socket
+    return self.sslsocket_class._create(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\ssl.py", line 1042, in _create
+    self.do_handshake()
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python312\Lib\ssl.py", line 1320, in do_handshake
+    self._sslobj.do_handshake()
+TimeoutError: [WinError 10060] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\requests\adapters.py", line 644, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\util\retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\util\util.py", line 39, in reraise
+    raise value
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connectionpool.py", line 488, in _make_request      
+    raise new_e
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connectionpool.py", line 466, in _make_request      
+    self._raise_timeout(err=e, url=url, timeout_value=conn.timeout)
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\urllib3\connectionpool.py", line 367, in _raise_timeout     
+    raise ReadTimeoutError(
+urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='raw.githubusercontent.com', port=443): Read timed out. (read timeout=None)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\spacy\__main__.py", line 4, in <module>
+    setup_cli()
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\spacy\cli\_util.py", line 87, in setup_cli
+    command(prog_name=COMMAND)
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\click\core.py", line 1442, in __call__
+    return self.main(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\typer\core.py", line 761, in main
+    return _main(
+           ^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\typer\core.py", line 193, in _main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\click\core.py", line 1830, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))        
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\click\core.py", line 1226, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\click\core.py", line 794, in invoke
+    return callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\typer\main.py", line 699, in wrapper
+    return callback(**use_params)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\spacy\cli\download.py", line 44, in download_cli
+    download(model, direct, sdist, *ctx.args)
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\spacy\cli\download.py", line 85, in download
+    compatibility = get_compatibility()
+                    ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\spacy\cli\download.py", line 130, in get_compatibility      
+    r = requests.get(about.__compatibility__)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\requests\api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)       
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\Desktop\projects\PolitiScope\venv\Lib\site-packages\requests\adapters.py", line 690, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='raw.githubusercontent.com', port=443): Read timed out. (read timeout=None) 
+(venv) PS C:\Users\USER\Desktop\projects\PolitiScope> 
