@@ -418,8 +418,13 @@
                                                 <i class="fas fa-globe me-2 text-muted"></i>
                                             {% endif %}
                                             {{ source.source or 'Unknown Source' }}
+                                            {% if source.contains_speech %}
+                                                <span class="badge bg-success ms-2" title="Contains speeches or quotes">
+                                                    <i class="fas fa-quote-left me-1"></i>Speech Content
+                                                </span>
+                                            {% endif %}
                                             {% if source.title %}
-                                                <small class="text-muted"> - {{ source.title }}</small>
+                                                <br><small class="text-muted">{{ source.title }}</small>
                                             {% endif %}
                                         </h6>
                                     </div>

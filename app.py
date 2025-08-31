@@ -167,10 +167,15 @@ def analyze_texts():
                 'title': text.get('title', ''),
                 'word_count': text.get('word_count', 0),
                 'url': text.get('url', ''),
-                'content': text.get('content', '')[:2000] if text.get('content') else ''  # Store 2000 chars for preview
+                'content': text.get('content', '')[:800] if text.get('content') else '',  # Reduced content to prevent session overflow
+                'contains_speech': text.get('contains_speech', False)  # Include speech indicator
             }
             enhanced_breakdown.append(enhanced_source)
         session['source_breakdown'] = enhanced_breakdown
+        
+        logging.info(f"Stored {len(enhanced_breakdown)} sources in session breakdown:")
+        for i, source in enumerate(enhanced_breakdown):
+            logging.info(f"  {i+1}. {source['source']} - {source['word_count']} words - Speech: {source.get('contains_speech', False)}")
         
         # Clean up temp storage
         if hasattr(app, '_temp_texts') and session_id in app._temp_texts:
