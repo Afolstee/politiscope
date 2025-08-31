@@ -96,9 +96,10 @@ class PoliticalTextScraper:
         try:
             # Search BBC with multiple search terms for better coverage
             search_terms = [
-                politician_name,
+                f"{politician_name} said",
                 f"{politician_name} speech",
-                f"{politician_name} statement"
+                f"{politician_name} statement",
+                f"{politician_name} remarks"
             ]
             
             all_article_links = set()  # Use set to avoid duplicates
@@ -265,15 +266,11 @@ class PoliticalTextScraper:
                                 if '/the-presidency/presidential-speeches/' in href:
                                     if href.startswith('/'):
                                         href = 'https://millercenter.org' + href
-                                    # Filter for president-specific speeches
-                                    if any(name_part.lower() in href.lower() for name_part in politician_name.split()):
-                                        all_speech_links.add(href)
-                                    elif 'biden' in name_lower and 'biden' in href.lower():
-                                        all_speech_links.add(href)
-                                    elif 'trump' in name_lower and 'trump' in href.lower():
-                                        all_speech_links.add(href)
-                                    elif 'obama' in name_lower and 'obama' in href.lower():
-                                        all_speech_links.add(href)
+                                    # Add all presidential speeches we find
+                                    all_speech_links.add(href)
+                                    # Limit to avoid too many links
+                                    if len(all_speech_links) >= 15:
+                                        break
                     except Exception as e:
                         logging.debug(f"Error with Miller Center search URL {search_url}: {str(e)}")
                         continue
