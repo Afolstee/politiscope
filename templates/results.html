@@ -354,64 +354,132 @@
                         <div class="card-header">
                             <h5 class="mb-0">
                                 <i class="fas fa-globe text-success me-2"></i>
-                                Data Sources
+                                Analyzed Content Sources
                             </h5>
+                            <p class="text-muted mb-0 mt-2">Review the content that was analyzed and access original sources</p>
                         </div>
                         <div class="card-body">
                             {% if source_breakdown %}
-                            <div class="row">
+                            <div class="row mb-4">
                                 <div class="col-md-8">
-                                    <h6>Sources Used in Analysis</h6>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>Source</th>
-                                                    <th>Word Count</th>
-                                                    <th>URL</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for source in source_breakdown %}
-                                                <tr>
-                                                    <td>
-                                                        <i class="fas fa-globe me-2 text-muted"></i>
-                                                        {{ source.source or 'Unknown Source' }}
-                                                    </td>
-                                                    <td>
-                                                        <span class="badge bg-primary">
-                                                            {{ "{:,}".format(source.word_count or 0) }}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        {% if source.url and source.url != 'sample_data' %}
-                                                            <a href="{{ source.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                                <i class="fas fa-external-link-alt me-1"></i>
-                                                                Visit
-                                                            </a>
-                                                        {% else %}
-                                                            <span class="text-muted">N/A</span>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
+                                    <h6>
+                                        <i class="fas fa-chart-pie me-2"></i>
+                                        Sources Summary
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="text-center">
+                                                <div class="h4 text-primary">{{ source_breakdown|length }}</div>
+                                                <small class="text-muted">Total Sources</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="text-center">
+                                                <div class="h4 text-success">{{ "{:,}".format(source_breakdown|sum(attribute='word_count') or 0) }}</div>
+                                                <small class="text-muted">Total Words</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="text-center">
+                                                <div class="h4 text-info">{{ (source_breakdown|selectattr('url')|selectattr('url', 'ne', 'sample_data')|list|length) }}</div>
+                                                <small class="text-muted">Live Sources</small>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                
                                 <div class="col-md-4">
                                     <h6>Source Distribution</h6>
                                     <div id="sourceChart" style="height: 300px;"></div>
                                 </div>
                             </div>
+
+                            <h6>
+                                <i class="fas fa-file-alt me-2"></i>
+                                Content Details & Previews
+                            </h6>
+                            
+                            <!-- Enhanced Source Cards -->
+                            {% for source in source_breakdown %}
+                            <div class="card mb-3 source-card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">
+                                            {% if source.source == 'Wikipedia' %}
+                                                <i class="fab fa-wikipedia-w me-2 text-primary"></i>
+                                            {% elif 'BBC' in source.source %}
+                                                <i class="fas fa-broadcast-tower me-2 text-danger"></i>
+                                            {% elif 'Reuters' in source.source %}
+                                                <i class="fas fa-newspaper me-2 text-info"></i>
+                                            {% elif 'Congress' in source.source %}
+                                                <i class="fas fa-landmark me-2 text-warning"></i>
+                                            {% elif 'Parliament' in source.source %}
+                                                <i class="fas fa-university me-2 text-secondary"></i>
+                                            {% else %}
+                                                <i class="fas fa-globe me-2 text-muted"></i>
+                                            {% endif %}
+                                            {{ source.source or 'Unknown Source' }}
+                                            {% if source.title %}
+                                                <small class="text-muted"> - {{ source.title }}</small>
+                                            {% endif %}
+                                        </h6>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">
+                                            {{ "{:,}".format(source.word_count or 0) }} words
+                                        </span>
+                                        {% if source.url and source.url != 'sample_data' %}
+                                            <a href="{{ source.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                View Source
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    {% if source.content %}
+                                    <div class="content-preview">
+                                        <h6 class="text-muted mb-2">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Content Preview (First 500 characters)
+                                        </h6>
+                                        <div class="preview-text p-3 bg-light rounded">
+                                            <p class="mb-2 text-dark">{{ source.content[:500] }}{% if source.content|length > 500 %}...{% endif %}</p>
+                                        </div>
+                                        {% if source.content|length > 500 %}
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                                    data-bs-toggle="collapse" data-bs-target="#fullContent{{ loop.index }}" 
+                                                    aria-expanded="false">
+                                                <i class="fas fa-expand-alt me-1"></i>
+                                                Show Full Content
+                                            </button>
+                                        </div>
+                                        <div class="collapse mt-3" id="fullContent{{ loop.index }}">
+                                            <div class="full-content p-3 bg-light rounded">
+                                                <h6 class="text-muted mb-2">Complete Analyzed Content</h6>
+                                                <div style="max-height: 400px; overflow-y: auto;">
+                                                    <p class="text-dark">{{ source.content }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Content preview not available for this source
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
                             
                             <div class="mt-4">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle me-2"></i>
-                                    <strong>Citation Note:</strong> When using this analysis in academic work, 
-                                    please cite the original sources listed above and mention the use of 
-                                    automated text analysis tools.
+                                    <strong>Citation & Transparency:</strong> 
+                                    All content shown above was collected from publicly available sources and analyzed using automated NLP techniques. 
+                                    When citing this analysis, please reference both the original sources and mention the use of computational text analysis methods.
                                 </div>
                             </div>
                             {% else %}

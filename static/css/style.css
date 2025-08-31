@@ -344,6 +344,39 @@ footer {
     box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
 }
 
+/* Source Card Styling */
+.source-card {
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+.source-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 8px rgba(0, 86, 179, 0.1);
+    transform: translateY(-1px);
+}
+
+.preview-text {
+    border-left: 4px solid var(--primary-color);
+    font-family: 'Georgia', serif;
+    line-height: 1.6;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.full-content {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-left: 4px solid #28a745;
+    font-family: 'Georgia', serif;
+    line-height: 1.6;
+}
+
+.content-preview h6 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

@@ -159,16 +159,18 @@ def analyze_texts():
         # Store results in session with limited content
         session['analysis_results'] = results
         
-        # Store limited source breakdown to avoid session overflow
-        limited_breakdown = []
+        # Store enhanced source breakdown with content previews for transparency
+        enhanced_breakdown = []
         for text in texts:
-            limited_source = {
+            enhanced_source = {
                 'source': text.get('source', 'Unknown'),
+                'title': text.get('title', ''),
                 'word_count': text.get('word_count', 0),
-                'url': text.get('url', '')
+                'url': text.get('url', ''),
+                'content': text.get('content', '')[:2000] if text.get('content') else ''  # Store 2000 chars for preview
             }
-            limited_breakdown.append(limited_source)
-        session['source_breakdown'] = limited_breakdown
+            enhanced_breakdown.append(enhanced_source)
+        session['source_breakdown'] = enhanced_breakdown
         
         # Clean up temp storage
         if hasattr(app, '_temp_texts') and session_id in app._temp_texts:

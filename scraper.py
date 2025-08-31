@@ -55,32 +55,66 @@ class PoliticalTextScraper:
             return None
 
     def search_news_sources(self, politician_name: str) -> List[Dict]:
-        """Search basic news sources"""
+        """Search news sources and extract individual article content"""
         news_results = []
         
-        # BBC News search (using their search page)
+        # BBC News search - try to extract individual articles
         try:
             bbc_search_url = f"https://www.bbc.com/search?q={politician_name.replace(' ', '+')}"
-            bbc_content = self.get_website_text_content(bbc_search_url)
-            if bbc_content:
-                news_results.append({
-                    'source': 'BBC News Search',
-                    'content': bbc_content[:2000],
-                    'url': bbc_search_url,
-                    'word_count': len(bbc_content.split())
-                })
+            response = self.session.get(bbc_search_url)
+            time.sleep(self.rate_limit_delay)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Look for article links in BBC search results
+                article_links = []
+                for link in soup.find_all('a', href=True):
+                    href = link.get('href', '')
+                    if ('/news/' in href or '/politics/' in href) and 'bbc.com' in href:
+                        if href.startswith('/'):
+                            href = 'https://www.bbc.com' + href
+                        article_links.append(href)
+                
+                # Get content from first article if found
+                if article_links:
+                    first_article = article_links[0]
+                    article_content = self.get_website_text_content(first_article)
+                    if article_content:
+                        news_results.append({
+                            'source': 'BBC News Article',
+                            'title': f'BBC article about {politician_name}',
+                            'content': article_content[:3000],
+                            'url': first_article,
+                            'word_count': len(article_content.split())
+                        })
+                
+                # If no individual articles found, use search results as fallback
+                if not article_links:
+                    bbc_content = self.get_website_text_content(bbc_search_url)
+                    if bbc_content:
+                        news_results.append({
+                            'source': 'BBC News Search Results',
+                            'title': f'BBC search results for {politician_name}',
+                            'content': bbc_content[:2000],
+                            'url': bbc_search_url,
+                            'word_count': len(bbc_content.split())
+                        })
         except Exception as e:
             logging.error(f"Error searching BBC: {str(e)}")
         
         time.sleep(self.rate_limit_delay)
         
-        # Reuters search
+        # Alternative news approach - try direct news APIs or RSS feeds
         try:
+            # Try a different approach - look for news using RSS or other methods
+            # For now, keeping Reuters as search results but with better labeling
             reuters_search_url = f"https://www.reuters.com/site-search/?query={politician_name.replace(' ', '+')}"
             reuters_content = self.get_website_text_content(reuters_search_url)
             if reuters_content:
                 news_results.append({
-                    'source': 'Reuters Search',
+                    'source': 'Reuters Search Results',
+                    'title': f'Reuters coverage of {politician_name}',
                     'content': reuters_content[:2000],
                     'url': reuters_search_url,
                     'word_count': len(reuters_content.split())
