@@ -435,24 +435,30 @@
                                             {{ "{:,}".format(source.word_count or 0) }} words
                                         </span>
                                         {% if source.url and source.url != 'sample_data' %}
-                                            <a href="{{ source.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ source.url }}" target="_blank" class="btn btn-sm btn-outline-primary me-2">
                                                 <i class="fas fa-external-link-alt me-1"></i>
                                                 View Source
                                             </a>
                                         {% endif %}
+                                        {% if source.source_id %}
+                                            <button type="button" class="btn btn-sm btn-success" onclick="viewTranscript('{{ source.source_id }}')">
+                                                <i class="fas fa-file-text me-1"></i>
+                                                View Transcript
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="card-body">
-                                    {% if source.content %}
+                                    {% if source.content_preview or source.content %}
                                     <div class="content-preview">
                                         <h6 class="text-muted mb-2">
                                             <i class="fas fa-eye me-1"></i>
                                             Content Preview (First 500 characters)
                                         </h6>
                                         <div class="preview-text p-3 bg-light rounded">
-                                            <p class="mb-2 text-dark">{{ source.content[:500] }}{% if source.content|length > 500 %}...{% endif %}</p>
+                                            <p class="mb-2 text-dark">{{ (source.content_preview or source.content or '')[:500] }}{% if (source.content_preview or source.content or '')|length > 500 %}...{% endif %}</p>
                                         </div>
-                                        {% if source.content|length > 500 %}
+                                        {% if (source.content_preview or source.content or '')|length > 500 %}
                                         <div class="mt-2">
                                             <button class="btn btn-sm btn-outline-secondary" type="button" 
                                                     data-bs-toggle="collapse" data-bs-target="#fullContent{{ loop.index }}" 
@@ -465,7 +471,7 @@
                                             <div class="full-content p-3 bg-light rounded">
                                                 <h6 class="text-muted mb-2">Complete Analyzed Content</h6>
                                                 <div style="max-height: 400px; overflow-y: auto;">
-                                                    <p class="text-dark">{{ source.content }}</p>
+                                                    <p class="text-dark">{{ source.content_preview or source.content or 'Content not available' }}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -594,5 +600,120 @@
         });
         {% endif %}
     });
+    
+    // Transcript viewer functions
+    window.viewTranscript = function(sourceId) {
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('transcriptModal'));
+        modal.show();
+        
+        // Reset modal state
+        document.getElementById('transcriptLoading').style.display = 'block';
+        document.getElementById('transcriptContent').style.display = 'none';
+        document.getElementById('transcriptError').style.display = 'none';
+        
+        // Fetch transcript
+        fetch(`/api/view_transcript/${sourceId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('transcriptLoading').style.display = 'none';
+                
+                if (data.success) {
+                    // Populate transcript data
+                    document.getElementById('transcriptSource').textContent = data.source_info.title || 'Transcript';
+                    document.getElementById('transcriptWordCount').textContent = data.word_count.toLocaleString();
+                    document.getElementById('transcriptCharCount').textContent = data.content_length.toLocaleString();
+                    document.getElementById('transcriptSourceName').textContent = data.source_info.source;
+                    document.getElementById('transcriptText').textContent = data.full_content;
+                    
+                    document.getElementById('transcriptContent').style.display = 'block';
+                } else {
+                    // Show error
+                    document.getElementById('transcriptErrorMessage').textContent = data.error || 'Failed to load transcript';
+                    document.getElementById('transcriptError').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('transcriptLoading').style.display = 'none';
+                document.getElementById('transcriptErrorMessage').textContent = 'Network error: ' + error.message;
+                document.getElementById('transcriptError').style.display = 'block';
+            });
+    }
+
+    window.copyTranscript = function() {
+        const transcriptText = document.getElementById('transcriptText').textContent;
+        navigator.clipboard.writeText(transcriptText).then(function() {
+            // Show success feedback
+            const button = event.target.closest('button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-success');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-primary');
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Could not copy text: ', err);
+            alert('Failed to copy transcript to clipboard');
+        });
+    }
 </script>
+
+<!-- Transcript Viewer Modal -->
+<div class="modal fade" id="transcriptModal" tabindex="-1" aria-labelledby="transcriptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="transcriptModalLabel">
+                    <i class="fas fa-file-text me-2"></i>
+                    Full Transcript
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="transcriptLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading transcript...</p>
+                </div>
+                <div id="transcriptContent" style="display: none;">
+                    <div class="mb-3">
+                        <h6 id="transcriptSource" class="text-muted"></h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="text-muted">Word Count: <span id="transcriptWordCount" class="fw-bold"></span></small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Character Count: <span id="transcriptCharCount" class="fw-bold"></span></small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Source: <span id="transcriptSourceName" class="fw-bold"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="transcript-text" style="max-height: 60vh; overflow-y: auto; white-space: pre-wrap; font-family: Georgia, serif; line-height: 1.6;">
+                        <div id="transcriptText"></div>
+                    </div>
+                </div>
+                <div id="transcriptError" style="display: none;" class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span id="transcriptErrorMessage"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="copyTranscript()">
+                    <i class="fas fa-copy me-1"></i>
+                    Copy Transcript
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

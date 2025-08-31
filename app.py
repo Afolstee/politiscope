@@ -61,12 +61,17 @@ def analyze():
         flash('Please select at least one analysis type', 'error')
         return redirect(url_for('index'))
     
-    # Create session ID for tracking
+    # Create session ID for tracking and clear any previous analysis data
     session_id = str(uuid.uuid4())
     session['session_id'] = session_id
     session['politician_name'] = politician_name
     session['country'] = country
     session['analysis_types'] = analysis_types
+    
+    # Clear any previous analysis data
+    session.pop('analysis_results', None)
+    session.pop('source_breakdown', None)
+    session.pop('collected_texts', None)
     
     return render_template('analysis.html', 
                          politician_name=politician_name,
@@ -79,22 +84,29 @@ def scrape_texts():
     """API endpoint to scrape political texts"""
     try:
         data = request.get_json()
-        politician_name = data.get('politician_name')
-        country = data.get('country', '')
+        politician_name = data.get('politician_name') or session.get('politician_name')
+        country = data.get('country', '') or session.get('country', '')
+        
+        # Ensure politician name is preserved in session
+        if politician_name:
+            session['politician_name'] = politician_name
         
         scraper = PoliticalTextScraper()
         texts = scraper.collect_texts(politician_name, country)
         
-        # Store in session for analysis - limit content size to avoid session cookie overflow
-        limited_texts = []
+        # Store minimal data in session to avoid cookie overflow
+        session_texts = []
         for text in texts:
-            limited_text = text.copy()
-            # Limit content to 1000 characters per source to avoid session overflow
-            if 'content' in limited_text:
-                limited_text['content'] = limited_text['content'][:1000]
-            limited_texts.append(limited_text)
+            session_text = {
+                'source': text.get('source', 'Unknown'),
+                'title': text.get('title', ''),
+                'word_count': text.get('word_count', 0),
+                'url': text.get('url', ''),
+                'contains_speech': text.get('contains_speech', False)
+            }
+            session_texts.append(session_text)
         
-        session['collected_texts'] = limited_texts
+        session['collected_texts'] = session_texts
         # Also store full texts temporarily in memory for immediate analysis
         if not hasattr(app, '_temp_texts'):
             app._temp_texts = {}
@@ -159,19 +171,32 @@ def analyze_texts():
         # Store results in session with limited content
         session['analysis_results'] = results
         
-        # Store enhanced source breakdown with content previews for transparency
+        # Store source breakdown with preview and store full content separately
         enhanced_breakdown = []
-        for text in texts:
+        full_transcripts = {}
+        
+        for i, text in enumerate(texts):
+            source_id = f"source_{i}"
             enhanced_source = {
+                'source_id': source_id,
                 'source': text.get('source', 'Unknown'),
                 'title': text.get('title', ''),
                 'word_count': text.get('word_count', 0),
                 'url': text.get('url', ''),
-                'content': text.get('content', '')[:800] if text.get('content') else '',  # Reduced content to prevent session overflow
-                'contains_speech': text.get('contains_speech', False)  # Include speech indicator
+                'content_preview': text.get('content', '')[:200] + '...' if text.get('content') and len(text.get('content', '')) > 200 else text.get('content', ''),
+                'contains_speech': text.get('contains_speech', False)
             }
             enhanced_breakdown.append(enhanced_source)
+            
+            # Store full content separately in temporary storage
+            full_transcripts[source_id] = text.get('content', '')
+        
         session['source_breakdown'] = enhanced_breakdown
+        
+        # Store full transcripts in temporary storage
+        if not hasattr(app, '_full_transcripts'):
+            app._full_transcripts = {}
+        app._full_transcripts[session_id] = full_transcripts
         
         logging.info(f"Stored {len(enhanced_breakdown)} sources in session breakdown:")
         for i, source in enumerate(enhanced_breakdown):
@@ -327,6 +352,46 @@ def feedback():
     
     return render_template('feedback.html',
                          politician_name=session.get('politician_name'))
+
+@app.route('/api/view_transcript/<source_id>')
+def view_transcript(source_id):
+    """View full transcript content for a specific source"""
+    try:
+        session_id = session.get('session_id')
+        if not session_id:
+            return jsonify({'error': 'No active session found'}), 400
+        
+        # Get full transcript from temporary storage
+        if (hasattr(app, '_full_transcripts') and 
+            session_id in app._full_transcripts and 
+            source_id in app._full_transcripts[session_id]):
+            
+            full_content = app._full_transcripts[session_id][source_id]
+            
+            # Get source info from session
+            source_breakdown = session.get('source_breakdown', [])
+            source_info = None
+            for source in source_breakdown:
+                if source.get('source_id') == source_id:
+                    source_info = source
+                    break
+            
+            if not source_info:
+                return jsonify({'error': 'Source information not found'}), 404
+            
+            return jsonify({
+                'success': True,
+                'source_info': source_info,
+                'full_content': full_content,
+                'content_length': len(full_content),
+                'word_count': len(full_content.split()) if full_content else 0
+            })
+        else:
+            return jsonify({'error': 'Transcript not found'}), 404
+            
+    except Exception as e:
+        logging.error(f"Error viewing transcript: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/export/<format>')
 def export_results(format):

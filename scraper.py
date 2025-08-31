@@ -6,6 +6,7 @@ from urllib.parse import urljoin, urlparse
 import trafilatura
 import feedparser
 from typing import List, Dict
+from transcript_extractor import get_miller_transcript
 
 class PoliticalTextScraper:
     def __init__(self):
@@ -231,8 +232,54 @@ class PoliticalTextScraper:
         
         return news_results
 
-    def search_miller_center(self, politician_name: str) -> List[Dict]:
-        """Search Miller Center for presidential speeches"""
+    def get_transcript_content(self, speech_url: str) -> str:
+        """Extract transcript content from Miller Center speech page"""
+        try:
+            response = self.session.get(speech_url)
+            time.sleep(self.rate_limit_delay)
+            
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Look for transcript content - Miller Center uses specific patterns
+                transcript_content = ""
+                
+                # Try different selectors for transcript content
+                selectors = [
+                    '.field--name-field-docs-content',
+                    '.field--name-body',
+                    '.speech-text',
+                    '.transcript',
+                    '[data-history-node-id]',
+                    '.field--type-text-with-summary'
+                ]
+                
+                for selector in selectors:
+                    content_elem = soup.select_one(selector)
+                    if content_elem:
+                        # Get text content and clean it
+                        transcript_content = content_elem.get_text(separator='\n', strip=True)
+                        if len(transcript_content) > 500:  # Ensure substantial content
+                            break
+                
+                # If no specific transcript found, try to extract main content
+                if not transcript_content or len(transcript_content) < 500:
+                    # Look for the main article content
+                    article = soup.find('article') or soup.find('main') or soup.find('.content')
+                    if article:
+                        # Remove navigation, headers, footers
+                        for unwanted in article.find_all(['nav', 'header', 'footer', '.menu', '.navigation']):
+                            unwanted.decompose()
+                        transcript_content = article.get_text(separator='\n', strip=True)
+                
+                return transcript_content
+                
+        except Exception as e:
+            logging.debug(f"Error extracting transcript from {speech_url}: {str(e)}")
+            return ""
+    
+    def search_miller_center_enhanced(self, politician_name: str) -> List[Dict]:
+        """Enhanced Miller Center search to get at least 10 speech transcripts"""
         miller_results = []
         
         try:
@@ -243,81 +290,97 @@ class PoliticalTextScraper:
             if any(keyword in name_lower for keyword in president_keywords) or any(name in name_lower for name in ['joe biden', 'donald trump', 'barack obama', 'george bush', 'bill clinton', 'ronald reagan', 'jimmy carter']):
                 logging.info(f"Searching Miller Center for presidential speeches: {politician_name}")
                 
-                # Search Miller Center - try different approaches
-                search_urls = [
-                    f"https://millercenter.org/the-presidency/presidential-speeches?field_president_target_id=All&title={politician_name.replace(' ', '+')}", 
-                    f"https://millercenter.org/the-presidency/presidential-speeches",  # Get recent speeches page
-                    f"https://millercenter.org/search?keys={politician_name.replace(' ', '+')}"  # General site search
-                ]
+                # Enhanced search strategy - get the main speeches listing page
+                base_url = "https://millercenter.org/the-presidency/presidential-speeches"
                 
-                all_speech_links = set()
-                
-                for search_url in search_urls[:2]:  # Try first 2 search approaches
-                    try:
-                        response = self.session.get(search_url)
-                        time.sleep(self.rate_limit_delay)
+                try:
+                    response = self.session.get(base_url)
+                    time.sleep(self.rate_limit_delay)
+                    
+                    if response.status_code == 200:
+                        soup = BeautifulSoup(response.content, 'html.parser')
                         
-                        if response.status_code == 200:
-                            soup = BeautifulSoup(response.content, 'html.parser')
-                            
-                            # Look for speech links on Miller Center
-                            for link in soup.find_all('a', href=True):
-                                href = link.get('href', '')
-                                if '/the-presidency/presidential-speeches/' in href:
-                                    if href.startswith('/'):
-                                        href = 'https://millercenter.org' + href
-                                    # Add all presidential speeches we find
-                                    all_speech_links.add(href)
-                                    # Limit to avoid too many links
-                                    if len(all_speech_links) >= 15:
-                                        break
-                    except Exception as e:
-                        logging.debug(f"Error with Miller Center search URL {search_url}: {str(e)}")
-                        continue
-                
-                speech_links = list(all_speech_links)
-                
-                logging.info(f"Found {len(speech_links)} potential speech links on Miller Center")
-                
-                # Process first few speech links
-                processed_count = 0
-                max_speeches = 3
-                
-                for speech_url in speech_links[:max_speeches]:
-                    try:
-                        speech_content = self.get_website_text_content(speech_url)
+                        all_speech_links = set()
                         
-                        if speech_content and len(speech_content.strip()) > 200:
-                            # Extract speech title
-                            title = f"Presidential Speech from {politician_name}"
+                        # Look for speech links on Miller Center with more comprehensive search
+                        for link in soup.find_all('a', href=True):
+                            href = link.get('href', '')
+                            if '/the-presidency/presidential-speeches/' in href and href != '/the-presidency/presidential-speeches':
+                                if href.startswith('/'):
+                                    href = 'https://millercenter.org' + href
+                                all_speech_links.add(href)
+                                
+                                # Get more speeches - aim for at least 20 links to process
+                                if len(all_speech_links) >= 20:
+                                    break
+                        
+                        # Also try to find pagination or "more speeches" links
+                        for page_num in range(1, 4):  # Check first few pages
                             try:
-                                speech_response = self.session.get(speech_url)
-                                speech_soup = BeautifulSoup(speech_response.content, 'html.parser')
-                                title_elem = speech_soup.find('h1')
-                                if title_elem:
-                                    title = title_elem.get_text().strip()
+                                page_url = f"{base_url}?page={page_num}"
+                                page_response = self.session.get(page_url)
+                                time.sleep(self.rate_limit_delay)
+                                
+                                if page_response.status_code == 200:
+                                    page_soup = BeautifulSoup(page_response.content, 'html.parser')
+                                    for link in page_soup.find_all('a', href=True):
+                                        href = link.get('href', '')
+                                        if '/the-presidency/presidential-speeches/' in href and href != '/the-presidency/presidential-speeches':
+                                            if href.startswith('/'):
+                                                href = 'https://millercenter.org' + href
+                                            all_speech_links.add(href)
                             except:
-                                pass
-                            
-                            miller_results.append({
-                                'source': 'Miller Center Presidential Speeches',
-                                'title': title,
-                                'content': speech_content[:5000],  # Longer content for speeches
-                                'url': speech_url,
-                                'word_count': len(speech_content.split()),
-                                'contains_speech': True  # Miller Center always contains speeches
-                            })
-                            processed_count += 1
-                            
-                            logging.info(f"Added Miller Center speech: {title[:60]}...")
-                            
-                        time.sleep(self.rate_limit_delay)
+                                break
                         
-                    except Exception as e:
-                        logging.debug(f"Error processing Miller Center speech {speech_url}: {str(e)}")
-                        continue
+                        speech_links = list(all_speech_links)
+                        logging.info(f"Found {len(speech_links)} potential speech links on Miller Center")
+                        
+                        # Process speech links to get transcripts - aim for at least 10
+                        processed_count = 0
+                        target_speeches = 10
+                        
+                        for speech_url in speech_links:
+                            if processed_count >= target_speeches:
+                                break
+                                
+                            try:
+                                # Get transcript content specifically
+                                transcript_content = get_miller_transcript(speech_url, self.session)
+                                
+                                if transcript_content and len(transcript_content.strip()) > 300:
+                                    # Extract speech title and date
+                                    title = f"Presidential Speech from {politician_name}"
+                                    try:
+                                        speech_response = self.session.get(speech_url)
+                                        speech_soup = BeautifulSoup(speech_response.content, 'html.parser')
+                                        title_elem = speech_soup.find('h1') or speech_soup.find('.page-title') or speech_soup.find('title')
+                                        if title_elem:
+                                            title = title_elem.get_text().strip()
+                                    except:
+                                        pass
+                                    
+                                    miller_results.append({
+                                        'source': 'Miller Center Presidential Speeches',
+                                        'title': title,
+                                        'content': transcript_content,  # Full transcript
+                                        'url': speech_url,
+                                        'word_count': len(transcript_content.split()),
+                                        'contains_speech': True
+                                    })
+                                    processed_count += 1
+                                    
+                                    logging.info(f"Added Miller Center speech: {title[:60]}...")
+                                    
+                                time.sleep(self.rate_limit_delay)
+                                
+                            except Exception as e:
+                                logging.debug(f"Error processing Miller Center speech {speech_url}: {str(e)}")
+                                continue
+                        
+                        logging.info(f"Successfully processed {processed_count} Miller Center speeches for {politician_name}")
                 
-                logging.info(f"Successfully processed {processed_count} Miller Center speeches for {politician_name}")
+                except Exception as e:
+                    logging.error(f"Error accessing Miller Center speeches page: {str(e)}")
         
         except Exception as e:
             logging.error(f"Error searching Miller Center: {str(e)}")
@@ -422,44 +485,15 @@ class PoliticalTextScraper:
         return '\n\n'.join(unique_paragraphs)
 
     def collect_texts(self, politician_name: str, country: str = '') -> List[Dict]:
-        """Main function to collect texts from various sources with enhanced filtering"""
+        """Main function to collect texts focusing only on Miller Center transcripts"""
         all_texts = []
         
-        logging.info(f"Starting comprehensive text collection for: {politician_name}")
-        logging.info(f"Target: Find speeches, statements, and quotes from {politician_name}")
+        logging.info(f"Starting Miller Center transcript collection for: {politician_name}")
+        logging.info(f"Target: Find at least 10 speech transcripts from Miller Center")
         
-        # Search Wikipedia first (baseline biographical info)
+        # Focus only on Miller Center for presidential speeches
         try:
-            wiki_result = self.search_wikipedia(politician_name)
-            if wiki_result and wiki_result.get('content'):
-                wiki_result['content'] = self.clean_and_improve_content(wiki_result['content'])
-                if len(wiki_result['content']) > 100:  # Ensure meaningful content
-                    all_texts.append(wiki_result)
-                    logging.info(f"✓ Added Wikipedia article ({len(wiki_result['content'])} chars)")
-        except Exception as e:
-            logging.error(f"Wikipedia search failed: {str(e)}")
-        
-        # Search news sources (primary focus on BBC)
-        try:
-            news_results = self.search_news_sources(politician_name)
-            speech_articles = 0
-            for result in news_results:
-                if result.get('content'):
-                    result['content'] = self.clean_and_improve_content(result['content'])
-                    if len(result['content']) > 200:  # Minimum meaningful content
-                        all_texts.append(result)
-                        if result.get('contains_speech'):
-                            speech_articles += 1
-                            logging.info(f"✓ Added {result['source']} article with speech content ({len(result['content'])} chars)")
-                        else:
-                            logging.info(f"✓ Added {result['source']} article ({len(result['content'])} chars)")
-            logging.info(f"Found {speech_articles} articles containing speech content from news sources")
-        except Exception as e:
-            logging.error(f"News sources search failed: {str(e)}")
-        
-        # Search Miller Center for presidential speeches (if applicable)
-        try:
-            miller_results = self.search_miller_center(politician_name)
+            miller_results = self.search_miller_center_enhanced(politician_name)
             miller_speech_count = 0
             for result in miller_results:
                 if result.get('content'):
