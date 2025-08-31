@@ -13,18 +13,19 @@ class PoliticalTextScraper:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
-        self.rate_limit_delay = 2  # seconds between requests
+        self.rate_limit_delay = 0.5  # seconds between requests - reduced for faster collection
 
-    def get_website_text_content(self, url: str) -> str:
-        """Extract main text content from a website using trafilatura"""
+    def get_website_text_content(self, url: str, timeout: int = 10) -> str:
+        """Extract main text content from a website using trafilatura with timeout"""
         try:
-            downloaded = trafilatura.fetch_url(url)
+            # Use shorter timeout for faster processing
+            downloaded = trafilatura.fetch_url(url, config=trafilatura.settings.use_config())
             if downloaded:
-                text = trafilatura.extract(downloaded)
+                text = trafilatura.extract(downloaded, include_comments=False, include_tables=False)
                 return text or ""
             return ""
         except Exception as e:
-            logging.error(f"Error extracting content from {url}: {str(e)}")
+            logging.debug(f"Error extracting content from {url}: {str(e)}")
             return ""
 
     def search_wikipedia(self, politician_name: str) -> Dict:
@@ -89,19 +90,23 @@ class PoliticalTextScraper:
     def search_bbc_comprehensive(self, politician_name: str) -> List[Dict]:
         """Comprehensive BBC search that opens multiple links and filters for speeches/quotes"""
         bbc_results = []
+        start_time = time.time()
+        max_search_time = 15  # Maximum 15 seconds for BBC search
         
         try:
             # Search BBC with multiple search terms for better coverage
             search_terms = [
                 politician_name,
                 f"{politician_name} speech",
-                f"{politician_name} statement",
-                f"{politician_name} says"
+                f"{politician_name} statement"
             ]
             
             all_article_links = set()  # Use set to avoid duplicates
             
-            for search_term in search_terms:
+            for search_term in search_terms[:2]:  # Limit to 2 search terms for speed
+                if time.time() - start_time > max_search_time:
+                    logging.info(f"BBC search timeout reached, stopping with {len(all_article_links)} links found")
+                    break
                 try:
                     bbc_search_url = f"https://www.bbc.com/search?q={search_term.replace(' ', '+')}"
                     response = self.session.get(bbc_search_url)
@@ -135,11 +140,15 @@ class PoliticalTextScraper:
             
             logging.info(f"Found {len(all_article_links)} unique BBC article links for {politician_name}")
             
-            # Process each article link (limit to first 10 to avoid overwhelming)
+            # Process each article link (limit to first 5 for faster processing)
             processed_count = 0
-            max_articles = 10
+            max_articles = 5
             
             for article_url in list(all_article_links)[:max_articles]:
+                if time.time() - start_time > max_search_time:
+                    logging.info(f"BBC processing timeout reached, stopping with {processed_count} articles processed")
+                    break
+                    
                 try:
                     article_content = self.get_website_text_content(article_url)
                     
@@ -171,7 +180,7 @@ class PoliticalTextScraper:
                     time.sleep(self.rate_limit_delay)  # Rate limiting
                     
                 except Exception as e:
-                    logging.error(f"Error processing BBC article {article_url}: {str(e)}")
+                    logging.debug(f"Error processing BBC article {article_url}: {str(e)}")
                     continue
             
             logging.info(f"Successfully processed {processed_count} BBC articles with speech content for {politician_name}")
@@ -199,7 +208,7 @@ class PoliticalTextScraper:
                 f"{politician_name} speech"
             ]
             
-            for term in reuters_search_terms[:2]:  # Limit to 2 searches
+            for term in reuters_search_terms[:1]:  # Limit to 1 search for speed
                 reuters_search_url = f"https://www.reuters.com/site-search/?query={term.replace(' ', '+')}"
                 reuters_content = self.get_website_text_content(reuters_search_url)
                 
@@ -234,7 +243,7 @@ class PoliticalTextScraper:
                     f"{politician_name} remarks"
                 ]
                 
-                for term in congress_search_terms[:2]:  # Limit searches
+                for term in congress_search_terms[:1]:  # Limit to 1 search for speed
                     congress_search_url = f"https://www.congress.gov/search?q={term.replace(' ', '+')}"
                     congress_content = self.get_website_text_content(congress_search_url)
                     
@@ -265,7 +274,7 @@ class PoliticalTextScraper:
                     f"{politician_name} statement"
                 ]
                 
-                for term in parliament_search_terms[:2]:  # Limit searches
+                for term in parliament_search_terms[:1]:  # Limit to 1 search for speed
                     parliament_search_url = f"https://www.parliament.uk/search/results/?q={term.replace(' ', '+')}"
                     parliament_content = self.get_website_text_content(parliament_search_url)
                     
