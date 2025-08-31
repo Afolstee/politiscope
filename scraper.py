@@ -230,6 +230,103 @@ class PoliticalTextScraper:
         
         return news_results
 
+    def search_miller_center(self, politician_name: str) -> List[Dict]:
+        """Search Miller Center for presidential speeches"""
+        miller_results = []
+        
+        try:
+            # Check if this might be a US President
+            president_keywords = ['president', 'biden', 'trump', 'obama', 'bush', 'clinton', 'reagan', 'carter']
+            name_lower = politician_name.lower()
+            
+            if any(keyword in name_lower for keyword in president_keywords) or any(name in name_lower for name in ['joe biden', 'donald trump', 'barack obama', 'george bush', 'bill clinton', 'ronald reagan', 'jimmy carter']):
+                logging.info(f"Searching Miller Center for presidential speeches: {politician_name}")
+                
+                # Search Miller Center - try different approaches
+                search_urls = [
+                    f"https://millercenter.org/the-presidency/presidential-speeches?field_president_target_id=All&title={politician_name.replace(' ', '+')}", 
+                    f"https://millercenter.org/the-presidency/presidential-speeches",  # Get recent speeches page
+                    f"https://millercenter.org/search?keys={politician_name.replace(' ', '+')}"  # General site search
+                ]
+                
+                all_speech_links = set()
+                
+                for search_url in search_urls[:2]:  # Try first 2 search approaches
+                    try:
+                        response = self.session.get(search_url)
+                        time.sleep(self.rate_limit_delay)
+                        
+                        if response.status_code == 200:
+                            soup = BeautifulSoup(response.content, 'html.parser')
+                            
+                            # Look for speech links on Miller Center
+                            for link in soup.find_all('a', href=True):
+                                href = link.get('href', '')
+                                if '/the-presidency/presidential-speeches/' in href:
+                                    if href.startswith('/'):
+                                        href = 'https://millercenter.org' + href
+                                    # Filter for president-specific speeches
+                                    if any(name_part.lower() in href.lower() for name_part in politician_name.split()):
+                                        all_speech_links.add(href)
+                                    elif 'biden' in name_lower and 'biden' in href.lower():
+                                        all_speech_links.add(href)
+                                    elif 'trump' in name_lower and 'trump' in href.lower():
+                                        all_speech_links.add(href)
+                                    elif 'obama' in name_lower and 'obama' in href.lower():
+                                        all_speech_links.add(href)
+                    except Exception as e:
+                        logging.debug(f"Error with Miller Center search URL {search_url}: {str(e)}")
+                        continue
+                
+                speech_links = list(all_speech_links)
+                    
+                    logging.info(f"Found {len(speech_links)} potential speech links on Miller Center")
+                    
+                    # Process first few speech links
+                    processed_count = 0
+                    max_speeches = 3
+                    
+                    for speech_url in speech_links[:max_speeches]:
+                        try:
+                            speech_content = self.get_website_text_content(speech_url)
+                            
+                            if speech_content and len(speech_content.strip()) > 200:
+                                # Extract speech title
+                                title = f"Presidential Speech from {politician_name}"
+                                try:
+                                    speech_response = self.session.get(speech_url)
+                                    speech_soup = BeautifulSoup(speech_response.content, 'html.parser')
+                                    title_elem = speech_soup.find('h1')
+                                    if title_elem:
+                                        title = title_elem.get_text().strip()
+                                except:
+                                    pass
+                                
+                                miller_results.append({
+                                    'source': 'Miller Center Presidential Speeches',
+                                    'title': title,
+                                    'content': speech_content[:5000],  # Longer content for speeches
+                                    'url': speech_url,
+                                    'word_count': len(speech_content.split()),
+                                    'contains_speech': True  # Miller Center always contains speeches
+                                })
+                                processed_count += 1
+                                
+                                logging.info(f"Added Miller Center speech: {title[:60]}...")
+                                
+                            time.sleep(self.rate_limit_delay)
+                            
+                        except Exception as e:
+                            logging.debug(f"Error processing Miller Center speech {speech_url}: {str(e)}")
+                            continue
+                    
+                    logging.info(f"Successfully processed {processed_count} Miller Center speeches for {politician_name}")
+        
+        except Exception as e:
+            logging.error(f"Error searching Miller Center: {str(e)}")
+        
+        return miller_results
+
     def search_government_sources(self, politician_name: str, country: str = '') -> List[Dict]:
         """Search government websites for politician information with speech filtering"""
         gov_results = []
@@ -363,6 +460,21 @@ class PoliticalTextScraper:
         except Exception as e:
             logging.error(f"News sources search failed: {str(e)}")
         
+        # Search Miller Center for presidential speeches (if applicable)
+        try:
+            miller_results = self.search_miller_center(politician_name)
+            miller_speech_count = 0
+            for result in miller_results:
+                if result.get('content'):
+                    result['content'] = self.clean_and_improve_content(result['content'])
+                    if len(result['content']) > 200:
+                        all_texts.append(result)
+                        miller_speech_count += 1
+                        logging.info(f"✓ Added {result['source']} speech ({len(result['content'])} chars)")
+            logging.info(f"Found {miller_speech_count} presidential speeches from Miller Center")
+        except Exception as e:
+            logging.error(f"Miller Center search failed: {str(e)}")
+
         # Search government sources
         try:
             gov_results = self.search_government_sources(politician_name, country)
