@@ -279,48 +279,48 @@ class PoliticalTextScraper:
                         continue
                 
                 speech_links = list(all_speech_links)
-                    
-                    logging.info(f"Found {len(speech_links)} potential speech links on Miller Center")
-                    
-                    # Process first few speech links
-                    processed_count = 0
-                    max_speeches = 3
-                    
-                    for speech_url in speech_links[:max_speeches]:
-                        try:
-                            speech_content = self.get_website_text_content(speech_url)
+                
+                logging.info(f"Found {len(speech_links)} potential speech links on Miller Center")
+                
+                # Process first few speech links
+                processed_count = 0
+                max_speeches = 3
+                
+                for speech_url in speech_links[:max_speeches]:
+                    try:
+                        speech_content = self.get_website_text_content(speech_url)
+                        
+                        if speech_content and len(speech_content.strip()) > 200:
+                            # Extract speech title
+                            title = f"Presidential Speech from {politician_name}"
+                            try:
+                                speech_response = self.session.get(speech_url)
+                                speech_soup = BeautifulSoup(speech_response.content, 'html.parser')
+                                title_elem = speech_soup.find('h1')
+                                if title_elem:
+                                    title = title_elem.get_text().strip()
+                            except:
+                                pass
                             
-                            if speech_content and len(speech_content.strip()) > 200:
-                                # Extract speech title
-                                title = f"Presidential Speech from {politician_name}"
-                                try:
-                                    speech_response = self.session.get(speech_url)
-                                    speech_soup = BeautifulSoup(speech_response.content, 'html.parser')
-                                    title_elem = speech_soup.find('h1')
-                                    if title_elem:
-                                        title = title_elem.get_text().strip()
-                                except:
-                                    pass
-                                
-                                miller_results.append({
-                                    'source': 'Miller Center Presidential Speeches',
-                                    'title': title,
-                                    'content': speech_content[:5000],  # Longer content for speeches
-                                    'url': speech_url,
-                                    'word_count': len(speech_content.split()),
-                                    'contains_speech': True  # Miller Center always contains speeches
-                                })
-                                processed_count += 1
-                                
-                                logging.info(f"Added Miller Center speech: {title[:60]}...")
-                                
-                            time.sleep(self.rate_limit_delay)
+                            miller_results.append({
+                                'source': 'Miller Center Presidential Speeches',
+                                'title': title,
+                                'content': speech_content[:5000],  # Longer content for speeches
+                                'url': speech_url,
+                                'word_count': len(speech_content.split()),
+                                'contains_speech': True  # Miller Center always contains speeches
+                            })
+                            processed_count += 1
                             
-                        except Exception as e:
-                            logging.debug(f"Error processing Miller Center speech {speech_url}: {str(e)}")
-                            continue
-                    
-                    logging.info(f"Successfully processed {processed_count} Miller Center speeches for {politician_name}")
+                            logging.info(f"Added Miller Center speech: {title[:60]}...")
+                            
+                        time.sleep(self.rate_limit_delay)
+                        
+                    except Exception as e:
+                        logging.debug(f"Error processing Miller Center speech {speech_url}: {str(e)}")
+                        continue
+                
+                logging.info(f"Successfully processed {processed_count} Miller Center speeches for {politician_name}")
         
         except Exception as e:
             logging.error(f"Error searching Miller Center: {str(e)}")
