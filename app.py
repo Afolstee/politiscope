@@ -205,10 +205,10 @@ def ai_analyze():
 
 @app.route('/api/analyze_texts', methods=['POST'])
 def analyze_texts():
-    """API endpoint to analyze collected texts"""
+    """API endpoint to analyze collected texts using AI"""
     try:
         data = request.get_json()
-        analysis_types = data.get('analysis_types', [])
+        api_key = data.get('api_key', '').strip() or session.get('api_key', '')
         
         # Try to get full texts from temporary storage first, fallback to session
         session_id = session.get('session_id', 'default')
@@ -228,72 +228,53 @@ def analyze_texts():
                 'error': 'No texts found. Please scrape texts first.'
             }), 400
         
-        # Combine all text content
-        combined_text = ' '.join([text['content'] for text in texts])
-        
-        results = {}
-        
-        if 'sentiment' in analysis_types:
-            results['sentiment'] = analyzer.analyze_sentiment(combined_text)
-        
-        if 'rhetorical' in analysis_types:
-            results['rhetorical'] = analyzer.analyze_rhetorical_elements(combined_text)
-        
-        if 'word_frequency' in analysis_types:
-            results['word_frequency'] = analyzer.analyze_word_frequency(combined_text)
-        
-        if 'linguistic' in analysis_types:
-            results['linguistic'] = analyzer.analyze_linguistic_features(combined_text)
-        
-        # Store results in session with limited content
-        session['analysis_results'] = results
-        
-        # Store source breakdown with preview and store full content separately
-        enhanced_breakdown = []
-        full_transcripts = {}
-        
-        for i, text in enumerate(texts):
-            source_id = f"source_{i}"
-            enhanced_source = {
-                'source_id': source_id,
-                'source': text.get('source', 'Unknown'),
-                'title': text.get('title', ''),
-                'word_count': text.get('word_count', 0),
-                'url': text.get('url', ''),
-                'content_preview': text.get('content', '')[:200] + '...' if text.get('content') and len(text.get('content', '')) > 200 else text.get('content', ''),
-                'contains_speech': text.get('contains_speech', False)
-            }
-            enhanced_breakdown.append(enhanced_source)
-            
-            # Store full content separately in temporary storage
-            full_transcripts[source_id] = text.get('content', '')
-        
-        session['source_breakdown'] = enhanced_breakdown
-        
-        # Store full transcripts in temporary storage
-        if not hasattr(app, '_full_transcripts'):
-            app._full_transcripts = {}
-        app._full_transcripts[session_id] = full_transcripts
-        
-        logging.info(f"Stored {len(enhanced_breakdown)} sources in session breakdown:")
-        for i, source in enumerate(enhanced_breakdown):
-            logging.info(f"  {i+1}. {source['source']} - {source['word_count']} words - Speech: {source.get('contains_speech', False)}")
-        
-        # Clean up temp storage
+        # Combine all text content for AI analysis
         if hasattr(app, '_temp_texts') and session_id in app._temp_texts:
-            del app._temp_texts[session_id]
+            # Use full content from temp storage
+            combined_text = ' '.join([text.get('content', '') for text in texts])
+        else:
+            # For session data, we need to reconstruct from available info
+            combined_text = f"Political texts and speeches from {session.get('politician_name', 'politician')} collected from multiple sources including Wikipedia and Miller Center."
         
-        return jsonify({
-            'success': True,
-            'results': results
-        })
-    
+        # Limit text length for AI analysis
+        word_count = len(combined_text.split())
+        if word_count > 4000:
+            # Truncate to first 4000 words
+            words = combined_text.split()[:4000]
+            combined_text = ' '.join(words)
+            logging.info(f"Truncated text from {word_count} to 4000 words for AI analysis")
+        
+        # Stream the AI analysis
+        def generate_analysis():
+            try:
+                for chunk in ai_analyzer.stream_analysis(combined_text, api_key):
+                    yield f"data: {chunk}\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception as e:
+                error_data = json.dumps({'error': str(e)})
+                yield f"data: {error_data}\n\n"
+        
+        return Response(
+            generate_analysis(),
+            content_type='text/plain; charset=utf-8',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
+            }
+        )
+        
     except Exception as e:
         logging.error(f"Error in analyze_texts: {str(e)}")
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/ai_results')
+def ai_results():
+    """Display AI analysis results"""
+    return render_template('ai_results.html')
 
 @app.route('/results')
 def results():

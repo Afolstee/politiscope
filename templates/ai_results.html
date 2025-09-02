@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Critical Discourse Analysis Results{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5">
+                    <i class="fas fa-brain text-primary me-3"></i>
+                    Critical Discourse Analysis Results
+                </h1>
+                <p class="lead text-muted">
+                    Comprehensive analysis using AI-powered CDA methodology
+                </p>
+            </div>
+
+            <!-- Loading State -->
+            <div class="card" id="loading-card">
+                <div class="card-body text-center p-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5>Loading Analysis Results...</h5>
+                    <p class="text-muted">Retrieving your Critical Discourse Analysis</p>
+                </div>
+            </div>
+
+            <!-- Analysis in Progress -->
+            <div class="card d-none" id="analysis-progress-card">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-cogs fa-spin fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="mb-3">Analysis in Progress</h4>
+                    <p class="text-muted mb-4" id="analysis-status">Selecting appropriate CDA model...</p>
+                    
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="analysis-progress" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="text-center">
+                        <small class="text-muted" id="progress-percentage">0% complete</small>
+                    </div>
+                    
+                    <!-- Model Selection Display -->
+                    <div class="d-none mt-4" id="model-display">
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                <span id="selected-model-text">Selecting CDA framework...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Original Text Card -->
+            <div class="card mb-4 d-none" id="original-text-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-text me-2"></i>
+                        Original Text
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="bg-light p-3 rounded">
+                        <p class="mb-0" id="original-text" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Results Card -->
+            <div class="card mb-4 d-none" id="analysis-results-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain me-2 text-primary"></i>
+                        Critical Discourse Analysis
+                    </h5>
+                    <small class="text-muted">Comprehensive analysis using dynamically selected CDA methodology</small>
+                </div>
+                <div class="card-body">
+                    <div class="prose" style="max-width: none;">
+                        <div id="analysis-content" style="white-space: pre-wrap; line-height: 1.6; color: #374151;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Analysis State -->
+            <div class="card d-none" id="no-analysis-card">
+                <div class="card-body text-center p-5">
+                    <i class="fas fa-brain fa-3x text-muted mb-4"></i>
+                    <h4 class="mb-3">No Analysis Available</h4>
+                    <p class="text-muted mb-4">No analysis results found. Please go back and start a new analysis.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Start New Analysis
+                    </a>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="text-center mt-4" id="navigation-buttons" style="display: none;">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    New Analysis
+                </a>
+                <button class="btn btn-success me-3" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>
+                    Print Results
+                </button>
+                <button class="btn btn-info" onclick="downloadResults()">
+                    <i class="fas fa-download me-2"></i>
+                    Download Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let analysisResult = '';
+    let inputText = '';
+    let selectedModel = '';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAnalysisResults();
+    });
+
+    function loadAnalysisResults() {
+        // Try to get stored analysis from sessionStorage
+        analysisResult = sessionStorage.getItem('aiAnalysisResult');
+        inputText = sessionStorage.getItem('inputText') || sessionStorage.getItem('collectedText') || '';
+        selectedModel = sessionStorage.getItem('selectedModel') || '';
+        
+        if (analysisResult) {
+            showResults();
+        } else {
+            // No stored analysis, show no analysis state
+            document.getElementById('loading-card').classList.add('d-none');
+            document.getElementById('no-analysis-card').classList.remove('d-none');
+        }
+    }
+
+    function showResults() {
+        // Hide loading card
+        document.getElementById('loading-card').classList.add('d-none');
+        
+        // Show original text if available
+        if (inputText) {
+            document.getElementById('original-text').textContent = inputText;
+            document.getElementById('original-text-card').classList.remove('d-none');
+        }
+        
+        // Show analysis results
+        document.getElementById('analysis-content').textContent = analysisResult;
+        document.getElementById('analysis-results-card').classList.remove('d-none');
+        
+        // Show navigation buttons
+        document.getElementById('navigation-buttons').style.display = 'block';
+        
+        // Update title with selected model if available
+        if (selectedModel) {
+            const cardHeader = document.querySelector('#analysis-results-card .card-header h5');
+            cardHeader.innerHTML = `
+                <i class="fas fa-brain me-2 text-primary"></i>
+                Critical Discourse Analysis - ${selectedModel}
+            `;
+        }
+    }
+
+    function downloadResults() {
+        const content = `
+CRITICAL DISCOURSE ANALYSIS REPORT
+==================================
+
+Generated: ${new Date().toLocaleDateString()}
+Model Used: ${selectedModel || 'AI-selected CDA Framework'}
+
+ORIGINAL TEXT:
+${inputText}
+
+ANALYSIS:
+${analysisResult}
+        `.trim();
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'discourse-analysis-report.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+{% endblock %}
