@@ -155,7 +155,7 @@ ANALYSIS PRINCIPLES:
         }
         
         payload = {
-            "model": "grok-3",
+            "model": "grok-beta",
             "messages": [
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": prompt}
@@ -175,7 +175,15 @@ ANALYSIS PRINCIPLES:
             ) as response:
                 
                 if response.status_code != 200:
-                    error_msg = f"API Error {response.status_code}: {response.text}"
+                    # Read the response content properly for error handling
+                    error_content = ""
+                    try:
+                        for chunk in response.iter_bytes():
+                            error_content += chunk.decode('utf-8', errors='ignore')
+                    except:
+                        error_content = "Unable to read error response"
+                    
+                    error_msg = f"API Error {response.status_code}: {error_content}"
                     logger.error(error_msg)
                     raise Exception(error_msg)
                 
