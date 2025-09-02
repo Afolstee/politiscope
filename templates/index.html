@@ -31,6 +31,33 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('analyze') }}" id="analysisForm">
+                        <!-- API Key Input - Required for AI Analysis -->
+                        <div class="mb-4">
+                            <div class="alert alert-warning">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-robot fa-2x me-3 text-warning"></i>
+                                    <div>
+                                        <h6 class="mb-1">AI-Powered Analysis</h6>
+                                        <small>Both input methods use advanced AI for Critical Discourse Analysis. An xAI API key is required.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <label for="api_key" class="form-label">
+                                <i class="fas fa-key me-2 text-primary"></i>
+                                <strong>xAI API Key <span class="text-danger">*</span></strong>
+                            </label>
+                            <input type="password" class="form-control" id="api_key" name="api_key" 
+                                   placeholder="Enter your xAI API key for AI analysis" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Get your free API key from <a href="https://console.x.ai" target="_blank" class="text-primary">console.x.ai</a>
+                                - Required for both politician collection and manual text analysis
+                            </div>
+                        </div>
+
+                        <hr>
+
                         <!-- Step 1: Choose Input Method -->
                         <div class="mb-4">
                             <h5 class="text-primary">
@@ -137,19 +164,6 @@
                                                 </div>
                                             </div>
 
-                                            <!-- API Key Input -->
-                                            <div class="mt-3">
-                                                <label for="api_key" class="form-label">
-                                                    <i class="fas fa-key me-2"></i>
-                                                    xAI API Key (Optional)
-                                                </label>
-                                                <input type="password" class="form-control" id="api_key" name="api_key" 
-                                                       placeholder="Enter your xAI API key if needed">
-                                                <div class="form-text">
-                                                    Only required if the system API key is not configured. Get one from 
-                                                    <a href="https://console.x.ai" target="_blank" class="text-primary">console.x.ai</a>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -158,62 +172,16 @@
 
                         <hr>
 
-                        <!-- Step 2: Analysis Type Selection -->
+                        <!-- Step 2: Analysis Configuration -->
                         <div class="mb-4">
                             <h5 class="text-primary">
                                 <i class="fas fa-brain me-2"></i>
-                                Step 2: Select Analysis Types
+                                Step 2: AI Analysis Framework
                             </h5>
-                            <p class="text-muted">Choose one or more analysis types:</p>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="sentiment" 
-                                               name="analysis_types" value="sentiment" checked>
-                                        <label class="form-check-label" for="sentiment">
-                                            <strong>Sentiment Analysis</strong>
-                                            <br><small class="text-muted">
-                                                Analyze emotional tone and sentiment patterns
-                                            </small>
-                                        </label>
-                                    </div>
-                                    
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="rhetorical" 
-                                               name="analysis_types" value="rhetorical" checked>
-                                        <label class="form-check-label" for="rhetorical">
-                                            <strong>Rhetorical Analysis</strong>
-                                            <br><small class="text-muted">
-                                                Identify ethos, pathos, logos, and rhetorical devices
-                                            </small>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="word_frequency" 
-                                               name="analysis_types" value="word_frequency" checked>
-                                        <label class="form-check-label" for="word_frequency">
-                                            <strong>Word Frequency Analysis</strong>
-                                            <br><small class="text-muted">
-                                                Analyze most common words and vocabulary patterns
-                                            </small>
-                                        </label>
-                                    </div>
-                                    
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="linguistic" 
-                                               name="analysis_types" value="linguistic">
-                                        <label class="form-check-label" for="linguistic">
-                                            <strong>Linguistic Features</strong>
-                                            <br><small class="text-muted">
-                                                Analyze complexity, readability, and formality
-                                            </small>
-                                        </label>
-                                    </div>
-                                </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-magic me-2"></i>
+                                <strong>Critical Discourse Analysis</strong> - The AI will automatically select the most appropriate framework 
+                                (Fairclough, van Dijk, or Wodak) based on your text content and analysis context.
                             </div>
                         </div>
 
