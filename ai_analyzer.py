@@ -183,9 +183,25 @@ ANALYSIS PRINCIPLES:
                     except:
                         error_content = "Unable to read error response"
                     
-                    error_msg = f"API Error {response.status_code}: {error_content}"
-                    logger.error(error_msg)
-                    raise Exception(error_msg)
+                    # Parse JSON error response for better user feedback
+                    try:
+                        error_data = json.loads(error_content)
+                        if response.status_code == 403:
+                            if "credits" in error_content.lower():
+                                user_friendly_msg = "Your xAI account doesn't have sufficient credits. Please add credits at https://console.x.ai to continue analysis."
+                            else:
+                                user_friendly_msg = "Access denied. Please check your API key permissions."
+                        elif response.status_code == 401:
+                            user_friendly_msg = "Invalid API key. Please check your xAI API key and try again."
+                        elif response.status_code == 429:
+                            user_friendly_msg = "API rate limit exceeded. Please wait a moment and try again."
+                        else:
+                            user_friendly_msg = f"API Error ({response.status_code}): {error_data.get('error', 'Unknown error occurred')}"
+                    except:
+                        user_friendly_msg = f"API Error {response.status_code}: {error_content}"
+                    
+                    logger.error(f"API Error {response.status_code}: {error_content}")
+                    raise Exception(user_friendly_msg)
                 
                 for line in response.iter_lines():
                     if line.startswith("data: "):

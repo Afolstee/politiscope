@@ -16,6 +16,7 @@ function initializeApp() {
     setupTooltips();
     setupAnimations();
     setupAccessibility();
+    setupModernInterface();
 }
 
 /**
@@ -125,6 +126,234 @@ function setupInteractiveElements() {
     
     // Smooth scrolling
     setupSmoothScrolling();
+    
+    // Method selection cards
+    setupMethodSelectionCards();
+}
+
+/**
+ * Setup modern interface features
+ */
+function setupModernInterface() {
+    // Method selection card interactions
+    setupMethodSelectionCards();
+    
+    // Enhanced politician suggestions
+    setupEnhancedPoliticianSuggestions();
+    
+    // Progress tracking system
+    setupProgressTracking();
+    
+    // Countdown timer functionality
+    setupCountdownTimer();
+}
+
+/**
+ * Setup method selection card interactions
+ */
+function setupMethodSelectionCards() {
+    const methodCards = document.querySelectorAll('.method-card');
+    const radioButtons = document.querySelectorAll('input[name="input_method"]');
+    
+    // Handle card clicks
+    methodCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const method = this.dataset.method;
+            const radio = document.getElementById(`method-${method}`);
+            
+            if (radio) {
+                radio.checked = true;
+                updateMethodSelection(method);
+            }
+        });
+        
+        // Enhanced hover effects
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px) scale(1.02)';
+            this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('selected')) {
+                this.style.transform = '';
+                this.style.boxShadow = '';
+            }
+        });
+    });
+    
+    // Handle radio button changes
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            updateMethodSelection(this.value);
+        });
+    });
+    
+    // Initialize with default selection
+    const defaultMethod = document.querySelector('input[name="input_method"]:checked');
+    if (defaultMethod) {
+        updateMethodSelection(defaultMethod.value);
+    }
+}
+
+/**
+ * Update method selection UI
+ */
+function updateMethodSelection(selectedMethod) {
+    const methodCards = document.querySelectorAll('.method-card');
+    
+    methodCards.forEach(card => {
+        const method = card.dataset.method;
+        
+        if (method === selectedMethod) {
+            card.style.borderColor = 'var(--primary-color)';
+            card.style.backgroundColor = 'rgba(30, 64, 175, 0.05)';
+            card.style.transform = 'translateY(-4px) scale(1.02)';
+            card.style.boxShadow = '0 10px 25px rgba(30, 64, 175, 0.2)';
+            card.classList.add('selected');
+        } else {
+            card.style.borderColor = 'transparent';
+            card.style.backgroundColor = '';
+            card.style.transform = '';
+            card.style.boxShadow = '';
+            card.classList.remove('selected');
+        }
+    });
+    
+    // Show/hide appropriate tab content
+    const politicianTab = document.getElementById('politician-tab');
+    const manualTab = document.getElementById('manual-tab');
+    
+    if (selectedMethod === 'politician' && politicianTab) {
+        politicianTab.click();
+    } else if (selectedMethod === 'manual' && manualTab) {
+        manualTab.click();
+    }
+}
+
+/**
+ * Setup enhanced politician suggestions
+ */
+function setupEnhancedPoliticianSuggestions() {
+    const suggestions = document.querySelectorAll('.politician-suggestion');
+    
+    suggestions.forEach(suggestion => {
+        suggestion.addEventListener('click', function() {
+            const name = this.textContent.trim();
+            const country = this.dataset.country;
+            
+            // Fill in the form
+            const nameInput = document.getElementById('politician_name');
+            const countrySelect = document.getElementById('country');
+            
+            if (nameInput) {
+                nameInput.value = name;
+                // Add visual feedback
+                nameInput.style.backgroundColor = '#d1fae5';
+                setTimeout(() => {
+                    nameInput.style.backgroundColor = '';
+                }, 1500);
+            }
+            
+            if (countrySelect && country) {
+                countrySelect.value = country;
+            }
+            
+            // Add selected state to suggestion
+            suggestions.forEach(s => s.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // Show success feedback
+            showTemporaryMessage(`Selected: ${name}`, 'success', 2000);
+        });
+    });
+}
+
+/**
+ * Setup progress tracking system
+ */
+function setupProgressTracking() {
+    // This will be expanded when implementing the collection process
+    window.ProgressTracker = {
+        updateProgress: function(stage, percentage, message) {
+            console.log(`Progress: ${stage} - ${percentage}% - ${message}`);
+            // Implementation will be added for actual progress display
+        },
+        
+        showCountdown: function(seconds, callback) {
+            // Implementation for countdown timer
+            setupCountdownDisplay(seconds, callback);
+        }
+    };
+}
+
+/**
+ * Setup countdown timer functionality
+ */
+function setupCountdownTimer() {
+    window.CountdownTimer = {
+        start: function(seconds, onTick, onComplete) {
+            let remaining = seconds;
+            
+            const interval = setInterval(() => {
+                if (onTick) onTick(remaining);
+                
+                remaining--;
+                
+                if (remaining < 0) {
+                    clearInterval(interval);
+                    if (onComplete) onComplete();
+                }
+            }, 1000);
+            
+            return interval;
+        }
+    };
+}
+
+/**
+ * Setup countdown display
+ */
+function setupCountdownDisplay(seconds, callback) {
+    // Create countdown overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'countdown-container position-fixed';
+    overlay.style.cssText = `
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        min-width: 400px;
+    `;
+    
+    overlay.innerHTML = `
+        <div class="countdown-ring"></div>
+        <h4 class="mb-2">Text Collection Complete!</h4>
+        <p class="mb-3">Analysis will begin automatically in:</p>
+        <div class="countdown-timer" id="countdown-display">${seconds}</div>
+        <p class="mt-3">You can select analysis options or wait for auto-start</p>
+        <button class="btn btn-light btn-sm" onclick="this.parentElement.remove(); if(typeof callback === 'function') callback();">
+            Start Now
+        </button>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Start countdown
+    let remaining = seconds;
+    const interval = setInterval(() => {
+        const display = document.getElementById('countdown-display');
+        if (display) {
+            display.textContent = remaining;
+        }
+        
+        remaining--;
+        
+        if (remaining < 0) {
+            clearInterval(interval);
+            overlay.remove();
+            if (callback) callback();
+        }
+    }, 1000);
 }
 
 /**

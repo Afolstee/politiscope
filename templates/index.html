@@ -1,84 +1,197 @@
 {% extends "base.html" %}
 
-{% block title %}Home - Political Discourse Analyzer{% endblock %}
+{% block title %}Critical Discourse Analyzer - Academic Research Tool{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <!-- Header -->
-            <div class="text-center mb-5">
-                <h1 class="display-4 mb-3">
-                    <i class="fas fa-chart-line text-primary me-3"></i>
-                    Political Discourse Analyzer
+<!-- Academic Hero Section -->
+<div class="academic-header text-center fade-in-up">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <h1 class="hero-title">
+                    <i class="fas fa-graduation-cap me-3"></i>
+                    Critical Discourse Analyzer
                 </h1>
-                <p class="lead text-muted">
-                    Analyze political speeches, texts, and discourse using advanced NLP techniques
+                <p class="hero-subtitle">
+                    Advanced AI-powered analysis of political speeches and texts using cutting-edge Natural Language Processing and Critical Discourse Analysis methodologies
                 </p>
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    This tool provides academic-grade analysis suitable for research and graduate applications
+                <div class="mt-4">
+                    <span class="badge status-badge" style="background: rgba(255,255,255,0.2); color: white;">
+                        <i class="fas fa-university me-2"></i>
+                        Academic Research Tool
+                    </span>
+                    <span class="badge status-badge ms-2" style="background: rgba(255,255,255,0.2); color: white;">
+                        <i class="fas fa-robot me-2"></i>
+                        AI-Powered Analysis
+                    </span>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Analysis Form -->
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title mb-0">
-                        <i class="fas fa-user-tie me-2"></i>
-                        Start Political Analysis
-                    </h3>
+<!-- Feature Cards Section -->
+<div class="container-fluid py-5">
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card slide-in-right">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h5 class="mb-3">Politician Analysis</h5>
+                    <p class="text-muted">Automatically collect and analyze speeches from political figures using intelligent text collection</p>
                 </div>
-                <div class="card-body">
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card slide-in-right" style="animation-delay: 0.1s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <h5 class="mb-3">Manual Input</h5>
+                    <p class="text-muted">Upload and analyze custom political texts with comprehensive discourse analysis</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card slide-in-right" style="animation-delay: 0.2s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h5 class="mb-3">AI Analysis</h5>
+                    <p class="text-muted">Advanced AI-powered Critical Discourse Analysis using state-of-the-art language models</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card slide-in-right" style="animation-delay: 0.3s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h5 class="mb-3">Export Results</h5>
+                    <p class="text-muted">Download comprehensive analysis reports in multiple formats for research</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Analysis Interface -->
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <!-- Analysis Interface -->
+            <div class="card fade-in-up">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-microscope me-2"></i>
+                        Start Discourse Analysis
+                    </h3>
+                    <p class="mb-0 mt-2 opacity-75">Choose your input method and begin analyzing political discourse</p>
+                </div>
+                <div class="card-body p-4">
                     <form method="POST" action="{{ url_for('analyze') }}" id="analysisForm">
-                        <!-- API Key Input - Required for AI Analysis -->
-                        <div class="mb-4">
-                            <div class="alert alert-warning">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-robot fa-2x me-3 text-warning"></i>
-                                    <div>
-                                        <h6 class="mb-1">AI-Powered Analysis</h6>
-                                        <small>Both input methods use advanced AI for Critical Discourse Analysis. An xAI API key is required.</small>
-                                    </div>
+                        <!-- API Key Section -->
+                        <div class="mb-5">
+                            <div class="row align-items-center mb-3">
+                                <div class="col-md-8">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-key text-primary me-2"></i>
+                                        Authentication Required
+                                    </h5>
+                                    <p class="text-muted mb-0 mt-1">Secure API access for AI-powered analysis</p>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge status-badge status-collecting">
+                                        <i class="fas fa-shield-alt me-1"></i>
+                                        Secure
+                                    </span>
                                 </div>
                             </div>
                             
-                            <label for="api_key" class="form-label">
-                                <i class="fas fa-key me-2 text-primary"></i>
-                                <strong>xAI API Key <span class="text-danger">*</span></strong>
-                            </label>
-                            <input type="password" class="form-control" id="api_key" name="api_key" 
-                                   placeholder="Enter your xAI API key for AI analysis" required>
-                            <div class="form-text">
+                            <div class="position-relative">
+                                <input type="password" class="form-control" id="api_key" name="api_key" 
+                                       placeholder="Enter your xAI API key" required 
+                                       style="padding-left: 3rem;">
+                                <i class="fas fa-key position-absolute" style="left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary-color);"></i>
+                            </div>
+                            <div class="form-text mt-2">
                                 <i class="fas fa-info-circle me-1"></i>
-                                Get your free API key from <a href="https://console.x.ai" target="_blank" class="text-primary">console.x.ai</a>
-                                - Required for both politician collection and manual text analysis
+                                Get your API key from <a href="https://console.x.ai" target="_blank" class="text-primary text-decoration-none fw-medium">console.x.ai</a>
+                                • Required for both analysis methods
                             </div>
                         </div>
 
-                        <hr>
-
-                        <!-- Step 1: Choose Input Method -->
-                        <div class="mb-4">
-                            <h5 class="text-primary">
-                                <i class="fas fa-input-text me-2"></i>
-                                Step 1: Choose Input Method
-                            </h5>
+                        <!-- Input Method Selection -->
+                        <div class="mb-5">
+                            <div class="row align-items-center mb-4">
+                                <div class="col-md-8">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-route text-primary me-2"></i>
+                                        Analysis Method
+                                    </h5>
+                                    <p class="text-muted mb-0 mt-1">Choose how you want to provide content for analysis</p>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <span class="badge status-badge status-analyzing">
+                                        <i class="fas fa-cogs me-1"></i>
+                                        Step 1 of 2
+                                    </span>
+                                </div>
+                            </div>
                             
-                            <!-- Input Method Selection Tabs -->
-                            <ul class="nav nav-tabs" id="inputMethodTabs" role="tablist">
+                            <!-- Method Selection Cards -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card method-card h-100" data-method="politician" style="cursor: pointer; border: 2px solid transparent; transition: var(--transition-smooth);">
+                                        <div class="card-body text-center p-4">
+                                            <div class="feature-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                                <i class="fas fa-search"></i>
+                                            </div>
+                                            <h6 class="fw-bold mb-2">Politician Collection</h6>
+                                            <p class="text-muted small mb-3">Automatically gather speeches and texts from a specific political figure</p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="input_method" value="politician" id="method-politician" checked>
+                                                <label class="form-check-label fw-medium" for="method-politician">
+                                                    Select this method
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card method-card h-100" data-method="manual" style="cursor: pointer; border: 2px solid transparent; transition: var(--transition-smooth);">
+                                        <div class="card-body text-center p-4">
+                                            <div class="feature-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                                <i class="fas fa-edit"></i>
+                                            </div>
+                                            <h6 class="fw-bold mb-2">Manual Text Input</h6>
+                                            <p class="text-muted small mb-3">Paste or type your own political text for direct analysis</p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="input_method" value="manual" id="method-manual">
+                                                <label class="form-check-label fw-medium" for="method-manual">
+                                                    Select this method
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Input Forms -->
+                        <div class="input-forms-container">
+                            <!-- Input Method Selection Tabs (Hidden) -->
+                            <ul class="nav nav-tabs d-none" id="inputMethodTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link active" id="politician-tab" data-bs-toggle="tab" 
                                             data-bs-target="#politician-input" type="button" role="tab">
-                                        <i class="fas fa-search me-2"></i>
-                                        Collect from Politician
+                                        Politician Collection
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="manual-tab" data-bs-toggle="tab" 
                                             data-bs-target="#manual-input" type="button" role="tab">
-                                        <i class="fas fa-edit me-2"></i>
-                                        Manual Text Input
+                                        Manual Input
                                     </button>
                                 </li>
                             </ul>

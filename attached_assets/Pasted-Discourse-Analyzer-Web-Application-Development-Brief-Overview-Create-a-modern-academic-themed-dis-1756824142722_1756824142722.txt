@@ -1,0 +1,82 @@
+Discourse Analyzer Web Application - Development Brief
+Overview
+Create a modern, academic-themed discourse analysis web application that helps researchers analyze political speeches and texts using AI-powered analysis.
+Core Features
+1. Input Methods
+
+Politician Search: User inputs politician name + optional country field for faster search
+Manual Text Input: Direct text input field for custom analysis
+
+2. User Flow
+Politician Method:
+Input → Text Collection → Analysis → Results
+Manual Method:
+Input → Analysis → Results
+3. Text Collection Process (Politician Method Only)
+
+Display progress bar tracking collection status
+After collection completes, show 10-second countdown timer
+During countdown, prompt user to select analysis type/theory
+If no selection made, auto-start analysis with default settings
+
+4. Analysis Engine
+
+System automatically searches for appropriate theory/approach before analysis
+Apply selected or default analytical framework to collected/inputted text
+
+5. Results Display
+Politician Method Results:
+
+Analysis results (primary display)
+Source list showing where texts were collected from
+Download button for analysis export
+
+Manual Input Results:
+
+Text preview (truncated with "Show Full Text" button → modal with complete text)
+Analysis results
+Download button for analysis export
+
+Technical Requirements
+Design & UX
+
+Modern aesthetic with smooth animations and transitions
+Academic/Educational theme - professional, research-focused styling
+Responsive design for desktop and mobile
+Progress indicators and loading states throughout
+Interactive elements with hover effects and micro-animations
+
+File Export
+
+PDF download capability
+Additional format options (Word, plain text, etc.)
+
+Performance
+
+Efficient text processing
+Real-time progress tracking
+Smooth transitions between stages
+
+User Experience Flow
+
+Landing: Choose input method (Politician vs Manual)
+Input Stage: Form with appropriate fields
+Processing: Progress tracking with visual feedback
+Analysis Selection: Theory/approach selection during countdown
+Results: Comprehensive analysis display with export options
+
+Key Interactions
+
+Animated transitions between stages
+Real-time progress bars
+Countdown timers with user prompts
+Modal overlays for full text display
+Smooth hover effects and button animations
+Loading spinners and status indicators
+
+Technical Stack Suggestions
+
+Frontend: React/Vue.js with modern CSS animations
+Styling: Tailwind CSS or styled-components
+Icons: Academic/research-themed icon set
+Animations: Framer Motion or CSS transitions
