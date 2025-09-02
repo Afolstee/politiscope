@@ -5,55 +5,56 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-lg-8">
             <!-- Header -->
             <div class="text-center mb-4">
                 <h1 class="display-5">
                     <i class="fas fa-cogs text-primary me-3"></i>
-                    Analyzing Political Discourse
+                    Critical Discourse Analysis
                 </h1>
+                {% if input_method == 'politician' %}
                 <p class="lead text-muted">
-                    Processing texts for: <strong>{{ politician_name }}</strong>
+                    Processing discourse for: <strong>{{ politician_name }}</strong>
                     {% if country %} ({{ country }}){% endif %}
                 </p>
+                {% else %}
+                <p class="lead text-muted">
+                    Analyzing submitted text (<strong>{{ word_count }}</strong> words)
+                </p>
+                {% endif %}
             </div>
 
-            <!-- Progress Cards -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card h-100" id="scraping-card">
-                        <div class="card-body text-center">
-                            <div class="mb-3">
-                                <i class="fas fa-search fa-3x text-primary" id="scraping-icon"></i>
+            <!-- Single Progress Card -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-8">
+                    <div class="card shadow" id="progress-card">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i class="fas fa-search fa-4x text-primary" id="progress-icon"></i>
                             </div>
-                            <h5 class="card-title">Text Collection</h5>
-                            <p class="card-text text-muted">
-                                Gathering texts from Wikipedia, news sources, and government websites
+                            <h4 class="card-title" id="progress-title">Initializing Analysis</h4>
+                            <p class="card-text text-muted mb-4" id="progress-description">
+                                Preparing to analyze your text...
                             </p>
-                            <div class="progress mb-3">
+                            <div class="progress mb-3" style="height: 8px;">
                                 <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                     id="scraping-progress" role="progressbar" style="width: 0%"></div>
+                                     id="main-progress" role="progressbar" style="width: 0%"></div>
                             </div>
-                            <small class="text-muted" id="scraping-status">Initializing...</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card h-100" id="analysis-card">
-                        <div class="card-body text-center">
-                            <div class="mb-3">
-                                <i class="fas fa-brain fa-3x text-secondary" id="analysis-icon"></i>
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <small class="text-muted" id="progress-status">Starting...</small>
+                                </div>
                             </div>
-                            <h5 class="card-title">NLP Analysis</h5>
-                            <p class="card-text text-muted">
-                                Processing collected texts using advanced natural language processing
-                            </p>
-                            <div class="progress mb-3">
-                                <div class="progress-bar progress-bar-striped" 
-                                     id="analysis-progress" role="progressbar" style="width: 0%"></div>
+                            
+                            <!-- AI Model Selection Display (for manual input) -->
+                            <div class="d-none" id="ai-model-display">
+                                <div class="alert alert-info">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        <span id="selected-model">Selecting appropriate CDA framework...</span>
+                                    </div>
+                                </div>
                             </div>
-                            <small class="text-muted" id="analysis-status">Waiting for texts...</small>
                         </div>
                     </div>
                 </div>
@@ -64,10 +65,18 @@
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="fas fa-list me-2"></i>
-                        Selected Analysis Types
+                        {% if input_method == 'manual' %}AI Analysis Method{% else %}Selected Analysis Types{% endif %}
                     </h5>
                 </div>
                 <div class="card-body">
+                    {% if input_method == 'manual' %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-brain me-2"></i>
+                        <strong>AI-Powered Critical Discourse Analysis</strong><br>
+                        The system will automatically select the most appropriate CDA framework 
+                        (Fairclough, van Dijk, or Wodak) based on your text characteristics.
+                    </div>
+                    {% else %}
                     <div class="row">
                         {% for analysis_type in analysis_types %}
                         <div class="col-md-6 mb-2">
@@ -83,19 +92,21 @@
                         </div>
                         {% endfor %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Results Summary (Hidden initially) -->
-            <div class="card d-none" id="results-summary">
+            <!-- Collection Summary (Hidden initially) -->
+            <div class="card d-none" id="collection-summary">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-check-circle me-2"></i>
-                        Collection Summary
+                        Analysis Complete
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
+                        {% if input_method == 'politician' %}
                         <div class="col-md-4">
                             <h3 class="text-primary" id="total-sources">-</h3>
                             <p class="text-muted">Sources Found</p>
@@ -108,13 +119,29 @@
                             <h3 class="text-info" id="processing-time">-</h3>
                             <p class="text-muted">Processing Time</p>
                         </div>
+                        {% else %}
+                        <div class="col-md-4">
+                            <h3 class="text-primary">1</h3>
+                            <p class="text-muted">Text Analyzed</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-success" id="analyzed-words">{{ word_count if word_count else '-' }}</h3>
+                            <p class="text-muted">Words Processed</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-info" id="analysis-time">-</h3>
+                            <p class="text-muted">Analysis Time</p>
+                        </div>
+                        {% endif %}
                     </div>
+                    {% if input_method == 'politician' %}
                     <div id="sources-list" class="mt-3">
                         <h6>Sources:</h6>
                         <ul id="sources-ul" class="list-group list-group-flush">
                             <!-- Sources will be populated here -->
                         </ul>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -126,7 +153,7 @@
 
             <!-- Navigation -->
             <div class="text-center mt-4">
-                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3" id="home-btn">
                     <i class="fas fa-arrow-left me-2"></i>
                     Back to Home
                 </a>
@@ -138,11 +165,27 @@
         </div>
     </div>
 </div>
+
+<!-- Hidden data for JavaScript -->
+<script type="application/json" id="analysis-data">
+{
+    "input_method": "{{ input_method }}",
+    "politician_name": "{{ politician_name if politician_name else '' }}",
+    "country": "{{ country if country else '' }}",
+    "analysis_types": {{ analysis_types|tojson }},
+    "session_id": "{{ session_id }}",
+    "manual_text": "{{ manual_text if manual_text else '' }}",
+    "word_count": {{ word_count if word_count else 0 }}
+}
+</script>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    // Get analysis data
+    const analysisData = JSON.parse(document.getElementById('analysis-data').textContent);
     let startTime = Date.now();
+    let currentAnalysisResult = '';
     
     // Start the analysis process
     document.addEventListener('DOMContentLoaded', function() {
@@ -151,33 +194,34 @@
     
     async function startAnalysis() {
         try {
-            // Step 1: Scrape texts
-            await scrapeTexts();
-            
-            // Step 2: Analyze texts
-            await analyzeTexts();
-            
+            if (analysisData.input_method === 'politician') {
+                // Traditional workflow: collection -> analysis -> results
+                await scrapeTexts();
+                await analyzeTexts();
+            } else {
+                // Manual input workflow: skip directly to AI analysis
+                await performAIAnalysis();
+            }
         } catch (error) {
             showError(error.message);
         }
     }
     
     async function scrapeTexts() {
-        const scrapingCard = document.getElementById('scraping-card');
-        const scrapingIcon = document.getElementById('scraping-icon');
-        const scrapingProgress = document.getElementById('scraping-progress');
-        const scrapingStatus = document.getElementById('scraping-status');
-        
-        // Update UI
-        scrapingIcon.className = 'fas fa-spinner fa-spin fa-3x text-primary';
-        scrapingStatus.textContent = 'Searching for texts...';
+        updateProgressCard(
+            'fas fa-search fa-4x text-primary',
+            'Collecting Political Texts',
+            'Gathering texts from Wikipedia, news sources, and government websites...',
+            0,
+            'Searching for relevant texts...'
+        );
         
         // Animate progress
         let progress = 0;
         const progressInterval = setInterval(() => {
             progress += Math.random() * 10;
             if (progress > 90) progress = 90;
-            scrapingProgress.style.width = progress + '%';
+            updateProgress(progress);
         }, 500);
         
         try {
@@ -187,24 +231,30 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    politician_name: '{{ politician_name }}',
-                    country: '{{ country }}'
+                    politician_name: analysisData.politician_name,
+                    country: analysisData.country
                 })
             });
             
             const result = await response.json();
             
             clearInterval(progressInterval);
-            scrapingProgress.style.width = '100%';
+            updateProgress(100);
             
             if (result.success) {
-                // Success
-                scrapingIcon.className = 'fas fa-check-circle fa-3x text-success';
-                scrapingStatus.textContent = 'Text collection completed!';
-                scrapingCard.classList.add('border-success');
+                updateProgressCard(
+                    'fas fa-check-circle fa-4x text-success',
+                    'Text Collection Complete',
+                    `Successfully collected ${result.total_sources} sources with ${result.total_words} words`,
+                    100,
+                    'Collection completed successfully!'
+                );
                 
-                // Show summary
-                showResultsSummary(result);
+                // Store collection data for summary
+                window.collectionData = result;
+                
+                // Wait a moment then proceed to analysis
+                setTimeout(() => analyzeTexts(), 1500);
                 
                 return result;
             } else {
@@ -213,31 +263,42 @@
             
         } catch (error) {
             clearInterval(progressInterval);
-            scrapingIcon.className = 'fas fa-exclamation-triangle fa-3x text-danger';
-            scrapingStatus.textContent = 'Error during text collection';
-            scrapingCard.classList.add('border-danger');
+            updateProgressCard(
+                'fas fa-exclamation-triangle fa-4x text-danger',
+                'Collection Error',
+                'Failed to collect texts from sources',
+                0,
+                'Error during text collection'
+            );
             throw error;
         }
     }
     
     async function analyzeTexts() {
-        const analysisCard = document.getElementById('analysis-card');
-        const analysisIcon = document.getElementById('analysis-icon');
-        const analysisProgress = document.getElementById('analysis-progress');
-        const analysisStatus = document.getElementById('analysis-status');
-        
-        // Update UI
-        analysisIcon.className = 'fas fa-spinner fa-spin fa-3x text-primary';
-        analysisProgress.classList.add('progress-bar-animated');
-        analysisStatus.textContent = 'Running NLP analysis...';
+        updateProgressCard(
+            'fas fa-brain fa-4x text-primary',
+            'NLP Analysis in Progress',
+            'Processing collected texts using advanced natural language processing...',
+            0,
+            'Initializing analysis...'
+        );
         
         // Animate progress
         let progress = 0;
         const progressInterval = setInterval(() => {
-            progress += Math.random() * 15;
+            progress += Math.random() * 8;
             if (progress > 90) progress = 90;
-            analysisProgress.style.width = progress + '%';
-        }, 1000);
+            updateProgress(progress);
+            
+            // Update status based on progress
+            if (progress < 30) {
+                updateStatus('Analyzing sentiment patterns...');
+            } else if (progress < 60) {
+                updateStatus('Identifying rhetorical elements...');
+            } else if (progress < 90) {
+                updateStatus('Processing word frequencies...');
+            }
+        }, 800);
         
         try {
             const response = await fetch('/api/analyze_texts', {
@@ -246,81 +307,267 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    analysis_types: {{ analysis_types | tojson }}
+                    analysis_types: analysisData.analysis_types
                 })
             });
             
             const result = await response.json();
             
             clearInterval(progressInterval);
-            analysisProgress.style.width = '100%';
+            updateProgress(100);
             
             if (result.success) {
-                // Success
-                analysisIcon.className = 'fas fa-check-circle fa-3x text-success';
-                analysisStatus.textContent = 'Analysis completed!';
-                analysisCard.classList.add('border-success');
+                updateProgressCard(
+                    'fas fa-check-circle fa-4x text-success',
+                    'Analysis Complete',
+                    'Successfully analyzed political discourse using NLP techniques',
+                    100,
+                    'Analysis completed successfully!'
+                );
                 
-                // Show view results button
-                document.getElementById('view-results-btn').classList.remove('d-none');
-                document.getElementById('view-results-btn').onclick = function() {
-                    window.location.href = '/results';
-                };
+                // Wait a moment then show summary
+                setTimeout(() => showCompletionSummary(), 1500);
                 
-                // Update processing time
-                const processingTime = Math.round((Date.now() - startTime) / 1000);
-                document.getElementById('processing-time').textContent = processingTime + 's';
-                
+                return result;
             } else {
                 throw new Error(result.error || 'Unknown error during analysis');
             }
             
         } catch (error) {
             clearInterval(progressInterval);
-            analysisIcon.className = 'fas fa-exclamation-triangle fa-3x text-danger';
-            analysisStatus.textContent = 'Error during analysis';
-            analysisCard.classList.add('border-danger');
+            updateProgressCard(
+                'fas fa-exclamation-triangle fa-4x text-danger',
+                'Analysis Error',
+                'Failed to complete text analysis',
+                0,
+                'Error during analysis'
+            );
             throw error;
         }
     }
     
-    function showResultsSummary(result) {
-        const summaryCard = document.getElementById('results-summary');
-        const totalSources = document.getElementById('total-sources');
-        const totalWords = document.getElementById('total-words');
-        const sourcesUl = document.getElementById('sources-ul');
+    async function performAIAnalysis() {
+        updateProgressCard(
+            'fas fa-brain fa-4x text-primary',
+            'Analysis in Progress',
+            'AI is analyzing your text using advanced Critical Discourse Analysis...',
+            10,
+            'Selecting appropriate CDA model...'
+        );
         
-        totalSources.textContent = result.total_sources;
-        totalWords.textContent = result.total_words.toLocaleString();
+        // Show AI model selection display
+        document.getElementById('ai-model-display').classList.remove('d-none');
         
-        // Populate sources list
-        sourcesUl.innerHTML = '';
-        result.texts.forEach(source => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.innerHTML = `
-                <span>
-                    <i class="fas fa-globe me-2 text-muted"></i>
-                    ${source.source}
-                </span>
-                <span class="badge bg-primary rounded-pill">
-                    ${source.word_count || 0} words
-                </span>
-            `;
-            sourcesUl.appendChild(li);
-        });
+        try {
+            const response = await fetch('/api/ai_analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: analysisData.manual_text,
+                    api_key: '{{ session.get("api_key", "") }}'
+                })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to analyze text');
+            }
+            
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullResponse = '';
+            let progressStage = 0; // 0: model selection, 1: textual analysis, 2: discursive analysis, 3: completion
+            let selectedModel = '';
+            
+            updateProgress(20);
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                if (chunk.startsWith('data: ')) {
+                    const data = chunk.slice(6);
+                    if (data === '[DONE]\n\n') break;
+                    
+                    fullResponse += data;
+                    
+                    // Update progress based on content
+                    if (progressStage === 0 && (
+                        fullResponse.includes('Selected CDA Model') || 
+                        fullResponse.toLowerCase().includes('fairclough') ||
+                        fullResponse.toLowerCase().includes('van dijk') ||
+                        fullResponse.toLowerCase().includes('wodak')
+                    )) {
+                        // Model selection complete
+                        if (fullResponse.toLowerCase().includes('fairclough')) {
+                            selectedModel = "Fairclough's Three-Dimensional Framework";
+                        } else if (fullResponse.toLowerCase().includes('van dijk')) {
+                            selectedModel = "van Dijk's Socio-Cognitive Approach";
+                        } else if (fullResponse.toLowerCase().includes('wodak')) {
+                            selectedModel = "Wodak's Discourse-Historical Approach";
+                        }
+                        
+                        if (selectedModel) {
+                            document.getElementById('selected-model').textContent = `Selected: ${selectedModel}`;
+                            updateStatus(`Selected: ${selectedModel} - Conducting textual analysis...`);
+                            updateProgress(40);
+                            progressStage = 1;
+                        }
+                    } else if (progressStage === 1 && fullResponse.includes('Textual Analysis')) {
+                        updateStatus('Analyzing discursive practices...');
+                        updateProgress(60);
+                        progressStage = 2;
+                    } else if (progressStage === 2 && fullResponse.includes('Social Practice')) {
+                        updateStatus('Examining social implications...');
+                        updateProgress(80);
+                        progressStage = 3;
+                    } else if (progressStage === 3) {
+                        updateStatus('Finalizing analysis...');
+                        updateProgress(95);
+                    }
+                }
+            }
+            
+            updateProgress(100);
+            currentAnalysisResult = fullResponse;
+            
+            updateProgressCard(
+                'fas fa-check-circle fa-4x text-success',
+                'Analysis Complete',
+                `Successfully completed Critical Discourse Analysis using ${selectedModel || 'AI framework'}`,
+                100,
+                'Analysis completed successfully!'
+            );
+            
+            // Hide AI model display
+            document.getElementById('ai-model-display').classList.add('d-none');
+            
+            // Wait a moment then show summary
+            setTimeout(() => showCompletionSummary(), 1500);
+            
+        } catch (error) {
+            document.getElementById('ai-model-display').classList.add('d-none');
+            updateProgressCard(
+                'fas fa-exclamation-triangle fa-4x text-danger',
+                'Analysis Error',
+                'Failed to complete AI analysis',
+                0,
+                'Error during AI analysis'
+            );
+            throw error;
+        }
+    }
+    
+    function updateProgressCard(iconClass, title, description, progress, status) {
+        document.getElementById('progress-icon').className = iconClass;
+        document.getElementById('progress-title').textContent = title;
+        document.getElementById('progress-description').textContent = description;
+        updateProgress(progress);
+        updateStatus(status);
+    }
+    
+    function updateProgress(percentage) {
+        document.getElementById('main-progress').style.width = percentage + '%';
+    }
+    
+    function updateStatus(message) {
+        document.getElementById('progress-status').textContent = message;
+    }
+    
+    function showCompletionSummary() {
+        // Hide progress card
+        document.getElementById('progress-card').classList.add('d-none');
         
+        // Show completion summary
+        const summaryCard = document.getElementById('collection-summary');
         summaryCard.classList.remove('d-none');
+        
+        // Calculate processing time
+        const processingTime = Math.round((Date.now() - startTime) / 1000);
+        
+        if (analysisData.input_method === 'politician' && window.collectionData) {
+            // Update politician analysis summary
+            document.getElementById('total-sources').textContent = window.collectionData.total_sources;
+            document.getElementById('total-words').textContent = window.collectionData.total_words.toLocaleString();
+            document.getElementById('processing-time').textContent = processingTime + 's';
+            
+            // Populate sources list
+            const sourcesList = document.getElementById('sources-ul');
+            window.collectionData.texts.forEach(text => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    <div>
+                        <strong>${text.source}</strong>
+                        ${text.title ? '<br><small class="text-muted">' + text.title + '</small>' : ''}
+                    </div>
+                    <span class="badge bg-primary rounded-pill">${text.word_count} words</span>
+                `;
+                sourcesList.appendChild(li);
+            });
+        } else {
+            // Update manual analysis summary
+            document.getElementById('analysis-time').textContent = processingTime + 's';
+        }
+        
+        // Show results button
+        document.getElementById('view-results-btn').classList.remove('d-none');
+        document.getElementById('view-results-btn').addEventListener('click', function() {
+            if (analysisData.input_method === 'manual') {
+                // For manual input, show AI results directly
+                showAIResults();
+            } else {
+                // For politician input, go to traditional results page
+                window.location.href = '/results';
+            }
+        });
+    }
+    
+    function showAIResults() {
+        // Create a new page or modal to display AI analysis results
+        const resultsWindow = window.open('', '_blank');
+        resultsWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Critical Discourse Analysis Results</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+                    .analysis-content { line-height: 1.6; white-space: pre-wrap; }
+                </style>
+            </head>
+            <body>
+                <div class="container mt-4">
+                    <div class="row">
+                        <div class="col-12">
+                            <h1 class="mb-4">Critical Discourse Analysis Results</h1>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="analysis-content">${currentAnalysisResult}</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-primary" onclick="window.print()">Print Results</button>
+                                <button class="btn btn-secondary" onclick="window.close()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `);
     }
     
     function showError(message) {
-        const errorAlert = document.getElementById('error-alert');
-        const errorMessage = document.getElementById('error-message');
+        document.getElementById('error-message').textContent = message;
+        document.getElementById('error-alert').classList.remove('d-none');
         
-        errorMessage.textContent = message;
-        errorAlert.classList.remove('d-none');
-        
-        console.error('Analysis error:', message);
+        // Hide progress card
+        document.getElementById('progress-card').classList.add('d-none');
     }
 </script>
 {% endblock %}

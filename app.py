@@ -2,7 +2,7 @@ import os
 import logging
 import json
 import re
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -11,6 +11,7 @@ import uuid
 
 from scraper import PoliticalTextScraper
 from analyzer import PoliticalAnalyzer
+from ai_analyzer import CriticalDiscourseAnalyzer
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -38,8 +39,9 @@ with app.app_context():
     import models
     db.create_all()
 
-# Initialize analyzer
+# Initialize analyzers
 analyzer = PoliticalAnalyzer()
+ai_analyzer = CriticalDiscourseAnalyzer()
 
 @app.route('/')
 def index():
@@ -49,13 +51,9 @@ def index():
 @app.route('/analyze', methods=['POST'])
 def analyze():
     """Start analysis process"""
-    politician_name = request.form.get('politician_name', '').strip()
-    country = request.form.get('country', '').strip()
+    # Get input method to determine workflow
+    input_method = request.form.get('input_method', 'politician')
     analysis_types = request.form.getlist('analysis_types')
-    
-    if not politician_name:
-        flash('Please enter a politician name', 'error')
-        return redirect(url_for('index'))
     
     if not analysis_types:
         flash('Please select at least one analysis type', 'error')
@@ -64,20 +62,58 @@ def analyze():
     # Create session ID for tracking and clear any previous analysis data
     session_id = str(uuid.uuid4())
     session['session_id'] = session_id
-    session['politician_name'] = politician_name
-    session['country'] = country
     session['analysis_types'] = analysis_types
+    session['input_method'] = input_method
     
     # Clear any previous analysis data
     session.pop('analysis_results', None)
     session.pop('source_breakdown', None)
     session.pop('collected_texts', None)
+    session.pop('manual_text', None)
     
-    return render_template('analysis.html', 
-                         politician_name=politician_name,
-                         country=country,
-                         analysis_types=analysis_types,
-                         session_id=session_id)
+    if input_method == 'politician':
+        # Traditional politician collection workflow
+        politician_name = request.form.get('politician_name', '').strip()
+        country = request.form.get('country', '').strip()
+        
+        if not politician_name:
+            flash('Please enter a politician name', 'error')
+            return redirect(url_for('index'))
+        
+        session['politician_name'] = politician_name
+        session['country'] = country
+        
+        return render_template('analysis.html', 
+                             politician_name=politician_name,
+                             country=country,
+                             analysis_types=analysis_types,
+                             session_id=session_id,
+                             input_method=input_method)
+                             
+    else:
+        # Manual text input workflow
+        manual_text = request.form.get('manual_text', '').strip()
+        api_key = request.form.get('api_key', '').strip()
+        
+        if not manual_text:
+            flash('Please enter text for analysis', 'error')
+            return redirect(url_for('index'))
+        
+        # Validate text length
+        word_count = len(manual_text.split())
+        if word_count > 4000:
+            flash(f'Text too long ({word_count} words). Maximum 4000 words allowed.', 'error')
+            return redirect(url_for('index'))
+        
+        session['manual_text'] = manual_text
+        session['api_key'] = api_key
+        
+        return render_template('analysis.html',
+                             manual_text=manual_text,
+                             analysis_types=analysis_types,
+                             session_id=session_id,
+                             input_method=input_method,
+                             word_count=word_count)
 
 @app.route('/api/scrape_texts', methods=['POST'])
 def scrape_texts():
@@ -121,6 +157,47 @@ def scrape_texts():
     
     except Exception as e:
         logging.error(f"Error in scrape_texts: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/ai_analyze', methods=['POST'])
+def ai_analyze():
+    """AI-powered Critical Discourse Analysis endpoint"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '').strip()
+        api_key = data.get('api_key', '').strip()
+        
+        if not text:
+            return jsonify({
+                'success': False,
+                'error': 'Text is required for analysis'
+            }), 400
+        
+        # Stream the AI analysis
+        def generate_analysis():
+            try:
+                for chunk in ai_analyzer.stream_analysis(text, api_key):
+                    yield f"data: {chunk}\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception as e:
+                error_data = json.dumps({'error': str(e)})
+                yield f"data: {error_data}\n\n"
+        
+        return Response(
+            generate_analysis(),
+            content_type='text/plain; charset=utf-8',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
+            }
+        )
+        
+    except Exception as e:
+        logging.error(f"Error in ai_analyze: {str(e)}")
         return jsonify({
             'success': False,
             'error': str(e)

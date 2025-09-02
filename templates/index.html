@@ -31,58 +31,126 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('analyze') }}" id="analysisForm">
-                        <!-- Step 1: Politician Input -->
+                        <!-- Step 1: Choose Input Method -->
                         <div class="mb-4">
                             <h5 class="text-primary">
-                                <i class="fas fa-search me-2"></i>
-                                Step 1: Enter Politician Information
+                                <i class="fas fa-input-text me-2"></i>
+                                Step 1: Choose Input Method
                             </h5>
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <label for="politician_name" class="form-label">
-                                        Politician Name <span class="text-danger">*</span>
-                                    </label>
-                                    <input type="text" class="form-control" id="politician_name" 
-                                           name="politician_name" required
-                                           placeholder="e.g., Barack Obama, Winston Churchill"
-                                           pattern="[A-Za-z\s\-\.']+" 
-                                           title="Please enter a valid name (letters, spaces, hyphens, and periods only)">
-                                    <div class="form-text">
-                                        Enter the full name of the politician you want to analyze
-                                    </div>
-                                    
-                                    <!-- Quick Suggestions -->
-                                    <div class="mt-3">
-                                        <div class="text-muted mb-2">
-                                            <i class="fas fa-lightbulb me-1"></i>
-                                            <small>Quick suggestions (click to select):</small>
+                            
+                            <!-- Input Method Selection Tabs -->
+                            <ul class="nav nav-tabs" id="inputMethodTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="politician-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#politician-input" type="button" role="tab">
+                                        <i class="fas fa-search me-2"></i>
+                                        Collect from Politician
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="manual-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#manual-input" type="button" role="tab">
+                                        <i class="fas fa-edit me-2"></i>
+                                        Manual Text Input
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!-- Tab Content -->
+                            <div class="tab-content mt-3" id="inputMethodContent">
+                                <!-- Politician Input Tab -->
+                                <div class="tab-pane fade show active" id="politician-input" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <label for="politician_name" class="form-label">
+                                                Politician Name <span class="text-danger politician-required">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="politician_name" 
+                                                   name="politician_name"
+                                                   placeholder="e.g., Barack Obama, Winston Churchill"
+                                                   pattern="[A-Za-z\s\-\.']+" 
+                                                   title="Please enter a valid name (letters, spaces, hyphens, and periods only)">
+                                            <div class="form-text">
+                                                Enter the full name of the politician you want to analyze
+                                            </div>
+                                            
+                                            <!-- Quick Suggestions -->
+                                            <div class="mt-3">
+                                                <div class="text-muted mb-2">
+                                                    <i class="fas fa-lightbulb me-1"></i>
+                                                    <small>Quick suggestions (click to select):</small>
+                                                </div>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <span class="badge bg-outline-primary politician-suggestion" data-country="USA">Barack Obama</span>
+                                                    <span class="badge bg-outline-primary politician-suggestion" data-country="USA">Joe Biden</span>
+                                                    <span class="badge bg-outline-primary politician-suggestion" data-country="USA">Donald Trump</span>
+                                                    <span class="badge bg-outline-primary politician-suggestion" data-country="UK">Winston Churchill</span>
+                                                    <span class="badge bg-outline-primary politician-suggestion" data-country="Germany">Angela Merkel</span>
+                                                    <span class="badge bg-outline-primary politician-suggestion" data-country="France">Emmanuel Macron</span>
+                                                    <span class="badge bg-outline-primary politician-suggestion" data-country="Canada">Justin Trudeau</span>
+                                                    <span class="badge bg-outline-primary politician-suggestion" data-country="USA">Hillary Clinton</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            <span class="badge bg-outline-primary politician-suggestion" data-country="USA">Barack Obama</span>
-                                            <span class="badge bg-outline-primary politician-suggestion" data-country="USA">Joe Biden</span>
-                                            <span class="badge bg-outline-primary politician-suggestion" data-country="USA">Donald Trump</span>
-                                            <span class="badge bg-outline-primary politician-suggestion" data-country="UK">Winston Churchill</span>
-                                            <span class="badge bg-outline-primary politician-suggestion" data-country="Germany">Angela Merkel</span>
-                                            <span class="badge bg-outline-primary politician-suggestion" data-country="France">Emmanuel Macron</span>
-                                            <span class="badge bg-outline-primary politician-suggestion" data-country="Canada">Justin Trudeau</span>
-                                            <span class="badge bg-outline-primary politician-suggestion" data-country="USA">Hillary Clinton</span>
+                                        <div class="col-md-4">
+                                            <label for="country" class="form-label">Country/Region</label>
+                                            <select class="form-select" id="country" name="country">
+                                                <option value="">Any Country</option>
+                                                <option value="USA">United States</option>
+                                                <option value="UK">United Kingdom</option>
+                                                <option value="Canada">Canada</option>
+                                                <option value="Australia">Australia</option>
+                                                <option value="Germany">Germany</option>
+                                                <option value="France">France</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                            <div class="form-text">
+                                                Optional: helps improve search results
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="country" class="form-label">Country/Region</label>
-                                    <select class="form-select" id="country" name="country">
-                                        <option value="">Any Country</option>
-                                        <option value="USA">United States</option>
-                                        <option value="UK">United Kingdom</option>
-                                        <option value="Canada">Canada</option>
-                                        <option value="Australia">Australia</option>
-                                        <option value="Germany">Germany</option>
-                                        <option value="France">France</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                    <div class="form-text">
-                                        Optional: helps improve search results
+
+                                <!-- Manual Input Tab -->
+                                <div class="tab-pane fade" id="manual-input" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <label for="manual_text" class="form-label">
+                                                Text for Analysis <span class="text-danger manual-required">*</span>
+                                            </label>
+                                            <textarea class="form-control" id="manual_text" name="manual_text" 
+                                                      rows="8" placeholder="Paste or type the political text you want to analyze here... (Max 4000 words)"></textarea>
+                                            <div class="form-text d-flex justify-between">
+                                                <div id="word-counter" class="text-muted">0 / 4000 words</div>
+                                            </div>
+                                            
+                                            <!-- File Upload Option -->
+                                            <div class="mt-3">
+                                                <label for="text_file" class="form-label">
+                                                    <i class="fas fa-upload me-2"></i>
+                                                    Or Upload Text File
+                                                </label>
+                                                <input type="file" class="form-control" id="text_file" name="text_file" 
+                                                       accept=".txt,.docx,.pdf" onchange="handleFileUpload(this)">
+                                                <div class="form-text">
+                                                    Supported formats: .txt, .docx, .pdf (Max 4000 words)
+                                                </div>
+                                            </div>
+
+                                            <!-- API Key Input -->
+                                            <div class="mt-3">
+                                                <label for="api_key" class="form-label">
+                                                    <i class="fas fa-key me-2"></i>
+                                                    xAI API Key (Optional)
+                                                </label>
+                                                <input type="password" class="form-control" id="api_key" name="api_key" 
+                                                       placeholder="Enter your xAI API key if needed">
+                                                <div class="form-text">
+                                                    Only required if the system API key is not configured. Get one from 
+                                                    <a href="https://console.x.ai" target="_blank" class="text-primary">console.x.ai</a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -225,8 +293,39 @@
 
 {% block scripts %}
 <script>
+    // Track current input method
+    let currentInputMethod = 'politician';
+    
     // Form validation
     document.getElementById('analysisForm').addEventListener('submit', function(e) {
+        // Determine which tab is active
+        const activeTab = document.querySelector('.nav-link.active').id;
+        currentInputMethod = activeTab === 'politician-tab' ? 'politician' : 'manual';
+        
+        // Validate based on input method
+        if (currentInputMethod === 'politician') {
+            const politicianName = document.getElementById('politician_name').value.trim();
+            if (!politicianName) {
+                e.preventDefault();
+                alert('Please enter a politician name.');
+                return false;
+            }
+        } else {
+            const manualText = document.getElementById('manual_text').value.trim();
+            if (!manualText) {
+                e.preventDefault();
+                alert('Please enter text for analysis.');
+                return false;
+            }
+            
+            const wordCount = manualText.split(/\s+/).filter(word => word.length > 0).length;
+            if (wordCount > 4000) {
+                e.preventDefault();
+                alert('Text exceeds 4000 words limit. Please shorten your text.');
+                return false;
+            }
+        }
+        
         const checkboxes = document.querySelectorAll('input[name="analysis_types"]:checked');
         if (checkboxes.length === 0) {
             e.preventDefault();
@@ -234,10 +333,100 @@
             return false;
         }
         
+        // Add input method to form data
+        const inputMethodField = document.createElement('input');
+        inputMethodField.type = 'hidden';
+        inputMethodField.name = 'input_method';
+        inputMethodField.value = currentInputMethod;
+        this.appendChild(inputMethodField);
+        
         // Show loading state
         const submitBtn = this.querySelector('button[type="submit"]');
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Starting Analysis...';
         submitBtn.disabled = true;
+    });
+
+    // Word counter for manual text input
+    function updateWordCounter() {
+        const textArea = document.getElementById('manual_text');
+        const counter = document.getElementById('word-counter');
+        const text = textArea.value.trim();
+        const wordCount = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+        
+        counter.textContent = `${wordCount} / 4000 words`;
+        
+        if (wordCount > 4000) {
+            counter.classList.add('text-danger');
+            counter.classList.remove('text-muted');
+        } else {
+            counter.classList.remove('text-danger');
+            counter.classList.add('text-muted');
+        }
+    }
+    
+    // Add word counter event listener
+    document.getElementById('manual_text').addEventListener('input', updateWordCounter);
+
+    // File upload handler
+    function handleFileUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const allowedTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Please upload a valid text file (.txt, .pdf, or .docx)');
+            input.value = '';
+            return;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+            alert('File size too large. Please upload a file smaller than 10MB.');
+            input.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const wordCount = text.trim().split(/\s+/).filter(word => word.length > 0).length;
+            
+            if (wordCount > 4000) {
+                alert(`File contains ${wordCount} words, which exceeds the 4000 word limit. Please use a shorter text.`);
+                input.value = '';
+                return;
+            }
+            
+            document.getElementById('manual_text').value = text;
+            updateWordCounter();
+        };
+        
+        if (file.type === 'text/plain') {
+            reader.readAsText(file);
+        } else {
+            // For PDF and DOCX, we'll need server-side processing
+            alert('PDF and DOCX support coming soon. Please use .txt files for now.');
+            input.value = '';
+        }
+    }
+
+    // Tab switching logic
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(e) {
+            const targetId = e.target.getAttribute('data-bs-target');
+            
+            // Update required field indicators
+            if (targetId === '#politician-input') {
+                document.querySelector('.politician-required').style.display = 'inline';
+                document.querySelector('.manual-required').style.display = 'none';
+                document.getElementById('politician_name').required = true;
+                document.getElementById('manual_text').required = false;
+            } else {
+                document.querySelector('.politician-required').style.display = 'none';
+                document.querySelector('.manual-required').style.display = 'inline';
+                document.getElementById('politician_name').required = false;
+                document.getElementById('manual_text').required = true;
+            }
+        });
     });
 
     // Politician suggestion quick-select
@@ -270,6 +459,15 @@
         badge.addEventListener('mouseleave', function() {
             this.classList.remove('bg-light');
         });
+    });
+
+    // Initialize form state
+    document.addEventListener('DOMContentLoaded', function() {
+        updateWordCounter();
+        
+        // Set initial required field state
+        document.querySelector('.manual-required').style.display = 'none';
+        document.getElementById('manual_text').required = false;
     });
 </script>
 {% endblock %}
