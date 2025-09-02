@@ -45,13 +45,6 @@ function setupFormValidation() {
         });
     }
     
-    // Real-time checkbox validation
-    const analysisCheckboxes = document.querySelectorAll('input[name="analysis_types"]');
-    analysisCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            validateAnalysisTypes();
-        });
-    });
 }
 
 /**
@@ -87,48 +80,17 @@ function validatePoliticianName(input, showFeedback = false) {
     return isValid;
 }
 
-/**
- * Validate analysis types selection
- */
-function validateAnalysisTypes() {
-    const checkboxes = document.querySelectorAll('input[name="analysis_types"]:checked');
-    const isValid = checkboxes.length > 0;
-    
-    const container = document.querySelector('.analysis-types-container') || 
-                     document.querySelector('input[name="analysis_types"]').closest('.mb-4');
-    
-    // Remove existing validation feedback
-    const existingAlert = container.querySelector('.analysis-validation-alert');
-    if (existingAlert) {
-        existingAlert.remove();
-    }
-    
-    if (!isValid) {
-        const alert = document.createElement('div');
-        alert.className = 'alert alert-warning analysis-validation-alert mt-2';
-        alert.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Please select at least one analysis type.';
-        container.appendChild(alert);
-    }
-    
-    return isValid;
-}
 
 /**
  * Validate entire analysis form
  */
 function validateAnalysisForm(form) {
     const politicianName = form.querySelector('#politician_name');
-    const analysisTypes = form.querySelectorAll('input[name="analysis_types"]:checked');
     
     let isValid = true;
     
     // Validate politician name
     if (!validatePoliticianName(politicianName, true)) {
-        isValid = false;
-    }
-    
-    // Validate analysis types
-    if (!validateAnalysisTypes()) {
         isValid = false;
     }
     

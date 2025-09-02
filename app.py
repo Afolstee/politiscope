@@ -53,11 +53,8 @@ def analyze():
     """Start analysis process"""
     # Get input method to determine workflow
     input_method = request.form.get('input_method', 'politician')
-    analysis_types = request.form.getlist('analysis_types')
-    
-    if not analysis_types:
-        flash('Please select at least one analysis type', 'error')
-        return redirect(url_for('index'))
+    # Set default analysis types since selection is no longer required
+    analysis_types = ['ai_analysis']
     
     # Create session ID for tracking and clear any previous analysis data
     session_id = str(uuid.uuid4())

@@ -294,13 +294,6 @@
             }
         }
         
-        const checkboxes = document.querySelectorAll('input[name="analysis_types"]:checked');
-        if (checkboxes.length === 0) {
-            e.preventDefault();
-            alert('Please select at least one analysis type.');
-            return false;
-        }
-        
         // Add input method to form data
         const inputMethodField = document.createElement('input');
         inputMethodField.type = 'hidden';
