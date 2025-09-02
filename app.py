@@ -68,6 +68,10 @@ def analyze():
     session.pop('collected_texts', None)
     session.pop('manual_text', None)
     
+    # Get API key (required for both workflows)
+    api_key = request.form.get('api_key', '').strip()
+    session['api_key'] = api_key
+    
     if input_method == 'politician':
         # Traditional politician collection workflow
         politician_name = request.form.get('politician_name', '').strip()
@@ -90,7 +94,6 @@ def analyze():
     else:
         # Manual text input workflow
         manual_text = request.form.get('manual_text', '').strip()
-        api_key = request.form.get('api_key', '').strip()
         
         if not manual_text:
             flash('Please enter text for analysis', 'error')
@@ -103,7 +106,6 @@ def analyze():
             return redirect(url_for('index'))
         
         session['manual_text'] = manual_text
-        session['api_key'] = api_key
         
         return render_template('analysis.html',
                              manual_text=manual_text,
